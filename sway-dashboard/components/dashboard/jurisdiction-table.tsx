@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { MapPin, Users2, Gauge } from "lucide-react";
+import { MapPin, Users2, Gauge, ChevronDown, ChevronUp } from "lucide-react";
 import type { JurisdictionConcentration } from "@/lib/types";
 
 interface JurisdictionTableProps {
@@ -9,6 +10,8 @@ interface JurisdictionTableProps {
 }
 
 export function JurisdictionTable({ data }: JurisdictionTableProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const displayCount = isExpanded ? data.topJurisdictions.length : 5;
   const interpretConcentration = (hhi: number): { label: string; color: string } => {
     if (hhi > 0.5) return { label: "Very High", color: "text-red-600" };
     if (hhi > 0.25) return { label: "High", color: "text-orange-600" };
@@ -20,16 +23,16 @@ export function JurisdictionTable({ data }: JurisdictionTableProps) {
 
   return (
     <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-      <CardContent className="p-5">
-        <div>
+      <CardContent className="p-6">
+        <div className="mb-1">
           <div className="text-sm font-medium text-zinc-900">Geographic concentration</div>
           <div className="text-sm text-zinc-500">
             {concentration.label} concentration (HHI: {data.concentrationIndex.toFixed(2)})
           </div>
         </div>
 
-        <div className="mt-4 space-y-2">
-          {data.topJurisdictions.slice(0, 5).map((jurisdiction, index) => (
+        <div className="mt-4 space-y-2 max-h-[400px] overflow-y-auto">
+          {data.topJurisdictions.slice(0, displayCount).map((jurisdiction, index) => (
             <div
               key={jurisdiction.id}
               className="flex items-center gap-4 p-3 rounded-lg bg-white border border-zinc-200/70"
@@ -68,9 +71,22 @@ export function JurisdictionTable({ data }: JurisdictionTableProps) {
         </div>
 
         {data.topJurisdictions.length > 5 && (
-          <div className="mt-4 text-center text-sm text-zinc-500">
-            + {data.totalJurisdictions - 5} more jurisdictions
-          </div>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="mt-4 w-full flex items-center justify-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors py-2 px-4 rounded-lg hover:bg-zinc-50"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Show less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                Show {data.topJurisdictions.length - 5} more jurisdictions
+              </>
+            )}
+          </button>
         )}
       </CardContent>
     </Card>

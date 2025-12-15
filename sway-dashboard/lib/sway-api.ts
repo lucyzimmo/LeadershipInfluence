@@ -159,3 +159,73 @@ export async function fetchBenchmarkGroups(
   console.log('Benchmark query would use supporter count:', supporterCount);
   return null;
 }
+
+/**
+ * Fetch upcoming elections from CivicEngine API
+ */
+export async function fetchUpcomingElections(
+  geoIds: string[]
+): Promise<any[] | null> {
+  if (geoIds.length === 0) {
+    return null;
+  }
+
+  const query = `
+    query GetUpcomingElections($geoIds: [String!]!) {
+      CivicEngine {
+        positions(filterBy: { geoId: $geoIds }, first: 100) {
+          nodes {
+            id
+            name
+            level
+            races {
+              id
+              electionDay
+              type
+              office {
+                name
+                level
+              }
+              candidacies {
+                id
+                person {
+                  firstName
+                  lastName
+                  party
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const result = await querySwayAPI<{ CivicEngine: { positions: { nodes: any[] } } }>(query, {
+    geoIds,
+  });
+
+  if (!result?.CivicEngine?.positions?.nodes) {
+    return null;
+  }
+
+  // Flatten races from all positions
+  const races: any[] = [];
+  for (const position of result.CivicEngine.positions.nodes) {
+    for (const race of position.races || []) {
+      // Only include future elections
+      const electionDate = new Date(race.electionDay);
+      if (electionDate > new Date()) {
+        races.push({
+          id: race.id,
+          electionDay: race.electionDay,
+          office: race.office || { name: position.name, level: position.level },
+          candidateCount: race.candidacies?.length || 0,
+          type: race.type || 'race',
+        });
+      }
+    }
+  }
+
+  return races;
+}

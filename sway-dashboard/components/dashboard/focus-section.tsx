@@ -21,8 +21,8 @@ export function FocusSection({ insights }: FocusSectionProps) {
 
   return (
     <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-1">
           <div>
             <div className="text-sm font-medium text-zinc-900">This week's focus</div>
             <div className="text-sm text-zinc-500">Top actions to grow deployable influence</div>

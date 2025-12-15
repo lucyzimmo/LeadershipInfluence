@@ -104,8 +104,8 @@ export default function DashboardPage() {
           {/* Network Expansion */}
           {dashboard.networkExpansion && (
             <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-              <CardContent className="p-5">
-                <div>
+              <CardContent className="p-6">
+                <div className="mb-1">
                   <div className="text-sm font-medium text-zinc-900">Network expansion</div>
                   <div className="text-sm text-zinc-500">Leadership development & reach</div>
                 </div>
@@ -148,8 +148,8 @@ export default function DashboardPage() {
           {dashboard.coalitionOpportunities &&
             dashboard.coalitionOpportunities.length > 0 && (
               <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-                <CardContent className="p-5">
-                  <div>
+                <CardContent className="p-6">
+                  <div className="mb-1">
                     <div className="text-sm font-medium text-zinc-900">Coalition opportunities</div>
                     <div className="text-sm text-zinc-500">Potential partnerships with aligned leaders</div>
                   </div>
@@ -186,8 +186,8 @@ export default function DashboardPage() {
           {/* Movement Velocity */}
           {dashboard.velocity && (
             <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-              <CardContent className="p-5">
-                <div>
+              <CardContent className="p-6">
+                <div className="mb-1">
                   <div className="text-sm font-medium text-zinc-900">Movement velocity</div>
                   <div className="text-sm text-zinc-500">Growth momentum and projections</div>
                 </div>

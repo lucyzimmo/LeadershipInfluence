@@ -42,8 +42,8 @@ export function GrowthChart({ data, weeklyGrowthRate }: GrowthChartProps) {
 
   return (
     <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-      <CardContent className="p-5">
-        <div>
+      <CardContent className="p-6">
+        <div className="mb-1">
           <div className="text-sm font-medium text-zinc-900">Growth trend</div>
           {weeklyGrowthRate !== undefined && (
             <div className="text-sm text-zinc-500">

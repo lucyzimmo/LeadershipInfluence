@@ -56,9 +56,12 @@ function calculateLeverageLevel(
 /**
  * Compute ballot exposure metrics
  * Shows which ballot items the leader's verified voters can vote on
+ * @param data Static data from JSON files
+ * @param apiElections Optional upcoming elections from Sway API
  */
 export function computeBallotExposure(
-  data: SwayStaticData
+  data: SwayStaticData,
+  apiElections?: any[] | null
 ): BallotExposure[] {
   // 1. Get verified supporters and their jurisdictions
   const supporterProfileIds = data.profileViewpointGroupRels
@@ -87,12 +90,90 @@ export function computeBallotExposure(
   // 2. For each ballot item, count how many verified voters can vote on it
   const ballotExposures: BallotExposure[] = [];
 
+  // Track unique ballot items to avoid duplicates (by election + office)
+  const seenBallotItems = new Set<string>();
+
+  // Add API elections as pseudo-ballot items
+  if (apiElections && apiElections.length > 0) {
+    for (const apiElection of apiElections) {
+      const electionDate = parseISO(apiElection.electionDay);
+      const electionYear = electionDate.getFullYear();
+
+      // Create unique key including year to avoid duplicates across different election cycles
+      const uniqueKey = `api-${apiElection.office?.name || apiElection.id}-${electionYear}`;
+      if (seenBallotItems.has(uniqueKey)) continue;
+      seenBallotItems.add(uniqueKey);
+
+      const daysUntil = differenceInDays(electionDate, new Date());
+      if (daysUntil < 0) continue;
+
+      // Only include primary elections
+      const electionType = apiElection.type?.toLowerCase() || '';
+      const isPrimary = electionType.includes('primary');
+      if (!isPrimary) continue;
+
+      const urgency = calculateUrgency(electionDate);
+      const officeLevel = (apiElection.office?.level?.toLowerCase() as OfficeLevel) || 'local';
+      const candidateCount = apiElection.candidateCount || 0;
+
+      // Estimate verified supporters based on jurisdiction match
+      // (simplified - in production you'd match by exact jurisdiction)
+      const estimatedSupporters = Math.floor(verifiedVoters.length * 0.1);
+      if (estimatedSupporters === 0) continue;
+
+      const leverageScore =
+        estimatedSupporters *
+        leverageMultipliers[officeLevel] *
+        urgencyWeights[urgency];
+
+      const leverageLevel = calculateLeverageLevel(
+        estimatedSupporters,
+        candidateCount
+      );
+
+      // Build title with year if different from current year
+      const currentYear = new Date().getFullYear();
+      const officeName = apiElection.office?.name || 'Election';
+      const titleWithYear = electionYear !== currentYear
+        ? `${officeName} (${electionYear})`
+        : officeName;
+
+      ballotExposures.push({
+        ballotItem: {
+          id: apiElection.id,
+          title: titleWithYear,
+          type: apiElection.type === 'measure' ? 'measure' : 'race',
+          electionDate: apiElection.electionDay,
+          officeLevel,
+          officeName: titleWithYear,
+          candidateCount,
+        },
+        verifiedSupporters: estimatedSupporters,
+        urgency,
+        leverageScore,
+        leverageLevel,
+        jurisdiction: 'From Sway API', // Would need proper jurisdiction mapping
+      });
+    }
+  }
+
   for (const ballotItem of data.ballotItems) {
     // Get election date
     const election = data.elections.find((e) => e.id === ballotItem.election_id);
     if (!election) continue;
 
     const electionDate = parseISO(election.poll_date);
+    const electionYear = electionDate.getFullYear();
+
+    // Skip past elections (only show upcoming)
+    const daysUntil = differenceInDays(electionDate, new Date());
+    if (daysUntil < 0) continue;
+
+    // Only include primary elections
+    const electionName = election.name?.toLowerCase() || '';
+    const isPrimary = electionName.includes('primary');
+    if (!isPrimary) continue;
+
     const urgency = calculateUrgency(electionDate);
 
     // Count verified voters who can vote on this ballot item
@@ -152,12 +233,33 @@ export function computeBallotExposure(
       }
     }
 
-    // Build a title
+    // Get jurisdiction info first
+    const jurisdictionObj = ballotItem.jurisdiction_id
+      ? data.jurisdictions.find((j) => j.id === ballotItem.jurisdiction_id)
+      : undefined;
+    const jurisdiction = jurisdictionObj?.estimated_name || jurisdictionObj?.name;
+
+    // Build a title with jurisdiction and year
+    const currentYear = new Date().getFullYear();
+    const jurisdictionName = jurisdiction;
+
     if (officeName) {
-      ballotTitle = officeName;
+      ballotTitle = electionYear !== currentYear
+        ? `${officeName} (${electionYear})`
+        : officeName;
     } else {
-      // Fallback: use election name + jurisdiction
-      ballotTitle = `${election.name}`;
+      // Use jurisdiction + election type for title
+      if (jurisdictionName && !jurisdictionName.toLowerCase().includes('unknown')) {
+        // Extract "Primary Election" from election name, or use full name
+        const electionType = election.name.includes('Primary') ? 'Primary Election' : election.name;
+        ballotTitle = electionYear !== currentYear
+          ? `${jurisdictionName} ${electionType} (${electionYear})`
+          : `${jurisdictionName} ${electionType}`;
+      } else {
+        ballotTitle = electionYear !== currentYear
+          ? `${election.name} (${electionYear})`
+          : election.name;
+      }
     }
 
     // Default to local if not specified
@@ -174,10 +276,14 @@ export function computeBallotExposure(
       candidateCount
     );
 
-    const jurisdictionObj = ballotItem.jurisdiction_id
-      ? data.jurisdictions.find((j) => j.id === ballotItem.jurisdiction_id)
-      : undefined;
-    const jurisdiction = jurisdictionObj?.estimated_name || jurisdictionObj?.name;
+    // Create unique key including year to avoid duplicates across different election cycles
+    const uniqueKey = officeName
+      ? `${officeName}-${electionYear}`
+      : `${election.id}-${ballotItem.jurisdiction_id}-${electionYear}`;
+
+    // Skip if we've already seen this combination
+    if (seenBallotItems.has(uniqueKey)) continue;
+    seenBallotItems.add(uniqueKey);
 
     ballotExposures.push({
       ballotItem: {
