@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { DashboardModel } from "@/lib/types";
+import { Card, CardContent } from "@/components/ui/card";
 import { OverviewCards } from "@/components/dashboard/overview-cards";
 import { FocusSection } from "@/components/dashboard/focus-section";
 import { GrowthChart } from "@/components/dashboard/growth-chart";
@@ -54,29 +55,27 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Leader Influence Dashboard
-              </h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Transform political support data into actionable strategic intelligence
-              </p>
-            </div>
-            <div className="text-right text-sm text-gray-500">
-              Last updated:{" "}
+    <div className="min-h-screen bg-zinc-50">
+      <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+              Leader Influence
+            </h1>
+            <p className="text-sm text-zinc-500">
+              Deployable voting power, grounded in verified voters and upcoming ballots
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-zinc-500">Last updated</div>
+            <div className="text-sm font-medium text-zinc-900">
               {new Date(dashboard.summary.lastUpdated).toLocaleString()}
             </div>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Main Content */}
         <div className="space-y-6">
           {/* This Week's Focus */}
           {dashboard.focusThisWeek.length > 0 && (
@@ -104,111 +103,130 @@ export default function DashboardPage() {
 
           {/* Network Expansion */}
           {dashboard.networkExpansion && (
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <h2 className="text-xl font-semibold mb-4">Network Expansion</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold">
-                    {dashboard.networkExpansion.derivativeLeaders}
-                  </div>
-                  <div className="text-sm text-gray-600">Derivative Leaders</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Supporters who became leaders
-                  </p>
+            <Card className="rounded-xl border-zinc-200/70 shadow-sm">
+              <CardContent className="p-5">
+                <div>
+                  <div className="text-sm font-medium text-zinc-900">Network expansion</div>
+                  <div className="text-sm text-zinc-500">Leadership development & reach</div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold">
-                    {dashboard.networkExpansion.newJurisdictions}
-                  </div>
-                  <div className="text-sm text-gray-600">New Jurisdictions</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Unlocked through derivative leaders
-                  </p>
-                </div>
-                {dashboard.networkExpansion.potentialLeaders !== undefined && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold">
-                      {dashboard.networkExpansion.potentialLeaders}
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
+                    <div className="text-xs text-zinc-500">Derivative leaders</div>
+                    <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-1">
+                      {dashboard.networkExpansion.derivativeLeaders}
                     </div>
-                    <div className="text-sm text-gray-600">Potential Leaders</div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Verified supporters who could lead
-                    </p>
+                    <div className="text-sm text-zinc-600 mt-2">
+                      Supporters who became leaders
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
+                  <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
+                    <div className="text-xs text-zinc-500">New jurisdictions</div>
+                    <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-1">
+                      {dashboard.networkExpansion.newJurisdictions}
+                    </div>
+                    <div className="text-sm text-zinc-600 mt-2">
+                      Unlocked through derivative leaders
+                    </div>
+                  </div>
+                  {dashboard.networkExpansion.potentialLeaders !== undefined && (
+                    <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
+                      <div className="text-xs text-zinc-500">Potential leaders</div>
+                      <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-1">
+                        {dashboard.networkExpansion.potentialLeaders}
+                      </div>
+                      <div className="text-sm text-zinc-600 mt-2">
+                        Verified supporters who could lead
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* API-Enhanced Features */}
           {dashboard.coalitionOpportunities &&
             dashboard.coalitionOpportunities.length > 0 && (
-              <div className="bg-white p-6 rounded-lg shadow-sm border">
-                <h2 className="text-xl font-semibold mb-4">
-                  Coalition Opportunities
-                </h2>
-                <div className="space-y-3">
-                  {dashboard.coalitionOpportunities.map((coalition, index) => (
-                    <div
-                      key={index}
-                      className="p-4 bg-gray-50 rounded-lg border border-gray-200"
-                    >
-                      <div className="font-semibold">{coalition.leaderName}</div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {coalition.supporterCount} supporters •{" "}
-                        {coalition.sharedJurisdictions.length} shared
-                        jurisdictions • {coalition.sharedBallotItems} shared
-                        ballot items
+              <Card className="rounded-xl border-zinc-200/70 shadow-sm">
+                <CardContent className="p-5">
+                  <div>
+                    <div className="text-sm font-medium text-zinc-900">Coalition opportunities</div>
+                    <div className="text-sm text-zinc-500">Potential partnerships with aligned leaders</div>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    {dashboard.coalitionOpportunities.map((coalition, index) => (
+                      <div
+                        key={index}
+                        className="p-4 rounded-lg bg-white border border-zinc-200/70"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-zinc-900">
+                              {coalition.leaderName}
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-zinc-600 mt-2 flex-wrap">
+                              <span>{coalition.supporterCount} supporters</span>
+                              <span>{coalition.sharedJurisdictions.length} shared jurisdictions</span>
+                              <span>{coalition.sharedBallotItems} shared ballot items</span>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <span className="text-xs px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
+                              {(coalition.synergyScore * 100).toFixed(0)}% synergy
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        Synergy Score:{" "}
-                        {(coalition.synergyScore * 100).toFixed(0)}%
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
           {/* Movement Velocity */}
           {dashboard.velocity && (
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <h2 className="text-xl font-semibold mb-4">Movement Velocity</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold">
-                    {dashboard.velocity.yourGrowthRate.toFixed(1)}
+            <Card className="rounded-xl border-zinc-200/70 shadow-sm">
+              <CardContent className="p-5">
+                <div>
+                  <div className="text-sm font-medium text-zinc-900">Movement velocity</div>
+                  <div className="text-sm text-zinc-500">Growth momentum and projections</div>
+                </div>
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
+                    <div className="text-xs text-zinc-500">Growth rate</div>
+                    <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-1">
+                      {dashboard.velocity.yourGrowthRate.toFixed(1)}
+                    </div>
+                    <div className="text-sm text-zinc-600 mt-2">
+                      Supporters per week
+                    </div>
+                    <span className="mt-2 inline-block text-xs px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200 capitalize">
+                      {dashboard.velocity.trendDirection}
+                    </span>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    Supporters per week
-                  </div>
-                  <div className="text-sm text-gray-500 mt-1 capitalize">
-                    Trend: {dashboard.velocity.trendDirection}
+                  <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
+                    <div className="text-xs text-zinc-500">Projections</div>
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <div className="text-2xl font-semibold tracking-tight text-zinc-900">
+                          +{dashboard.velocity.projection.in30Days}
+                        </div>
+                        <div className="text-sm text-zinc-600">in 30 days</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-semibold tracking-tight text-zinc-900">
+                          +{dashboard.velocity.projection.in90Days}
+                        </div>
+                        <div className="text-sm text-zinc-600">in 90 days</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold">
-                    +{dashboard.velocity.projection.in30Days} / +
-                    {dashboard.velocity.projection.in90Days}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Projected growth (30/90 days)
-                  </div>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="mt-12 bg-white border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-sm text-gray-500">
-            Sway Leader Influence Dashboard • Built for strategic political organizing
-          </p>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }

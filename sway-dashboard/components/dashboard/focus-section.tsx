@@ -1,22 +1,17 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowRight } from "lucide-react";
 import type { ActionableInsight } from "@/lib/types";
 
 interface FocusSectionProps {
   insights: ActionableInsight[];
 }
 
-const priorityColors = {
-  1: "border-l-4 border-l-red-500 bg-red-50",
-  2: "border-l-4 border-l-orange-500 bg-orange-50",
-  3: "border-l-4 border-l-blue-500 bg-blue-50",
-};
-
 const impactBadgeColors = {
-  high: "bg-red-100 text-red-800",
-  medium: "bg-orange-100 text-orange-800",
-  low: "bg-blue-100 text-blue-800",
+  high: "bg-red-50 text-red-700 border-red-200",
+  medium: "bg-amber-50 text-amber-700 border-amber-200",
+  low: "bg-zinc-100 text-zinc-700 border-zinc-200",
 };
 
 export function FocusSection({ insights }: FocusSectionProps) {
@@ -25,41 +20,37 @@ export function FocusSection({ insights }: FocusSectionProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl">🎯 This Week's Focus</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {insights.map((insight, index) => (
-          <div
-            key={index}
-            className={`p-4 rounded-lg ${priorityColors[insight.priority]}`}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-lg">
-                    {insight.priority}. {insight.title}
-                  </h3>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      impactBadgeColors[insight.impact]
-                    }`}
-                  >
-                    {insight.impact} impact
+    <Card className="rounded-xl border-zinc-200/70 shadow-sm">
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium text-zinc-900">This week's focus</div>
+            <div className="text-sm text-zinc-500">Top actions to grow deployable influence</div>
+          </div>
+        </div>
+
+        <div className="mt-4 divide-y divide-zinc-100">
+          {insights.slice(0, 3).map((insight, index) => (
+            <div key={index} className="py-3 flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-medium text-zinc-900">{insight.title}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded border ${impactBadgeColors[insight.impact]}`}>
+                    {insight.impact === 'high' ? 'HIGH LEVERAGE' : insight.impact === 'medium' ? 'MEANINGFUL' : 'LOW'}
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 mt-1">
-                  {insight.description}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">{insight.metric}</p>
-                <div className="mt-2 text-sm font-medium text-gray-900">
-                  → {insight.action}
+                <div className="mt-1 text-sm text-zinc-600 line-clamp-1">
+                  {insight.description} • {insight.metric}
                 </div>
               </div>
+
+              <button className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors">
+                {insight.action.split(' ').slice(0, 2).join(' ')}
+                <ArrowRight className="h-3 w-3" />
+              </button>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

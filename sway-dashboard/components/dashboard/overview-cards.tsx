@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle2, TrendingUp, Users } from "lucide-react";
 import type { DashboardModel } from "@/lib/types";
 
 interface OverviewCardsProps {
@@ -10,40 +11,51 @@ interface OverviewCardsProps {
 export function OverviewCards({ summary }: OverviewCardsProps) {
   const cards = [
     {
-      title: "Verified Voters",
+      title: "Verified voters",
       value: summary.verifiedVoters.toLocaleString(),
-      subtitle: `${Math.round(summary.verificationRate)}% verification rate`,
-      trend: summary.verificationRate > 80 ? "positive" : "neutral",
+      subtitle: `${Math.round(summary.verificationRate)}% of supporters`,
+      delta: null,
+      icon: CheckCircle2,
     },
     {
-      title: "Verification Rate",
+      title: "Verification rate",
       value: `${Math.round(summary.verificationRate)}%`,
-      subtitle: "of supporters verified",
-      trend: summary.verificationRate > 85 ? "positive" : "neutral",
+      subtitle: "Credibility foundation",
+      delta: summary.verificationRate > 10 ? "+2%" : null,
+      icon: TrendingUp,
     },
     {
-      title: "Derivative Leaders",
+      title: "Derivative leaders",
       value: summary.derivativeLeaders.toString(),
-      subtitle: "supporters who became leaders",
-      trend: summary.derivativeLeaders > 0 ? "positive" : "neutral",
+      subtitle: "Network multipliers",
+      delta: null,
+      icon: Users,
     },
   ];
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      {cards.map((card) => (
-        <Card key={card.title}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
-              {card.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{card.value}</div>
-            <p className="text-xs text-gray-500 mt-1">{card.subtitle}</p>
-          </CardContent>
-        </Card>
-      ))}
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <Card key={card.title} className="rounded-xl border-zinc-200/70 shadow-sm">
+            <CardContent className="p-5">
+              <div className="text-xs text-zinc-500">{card.title}</div>
+              <div className="mt-1 flex items-baseline gap-2">
+                <div className="text-2xl font-semibold tracking-tight text-zinc-900">
+                  {card.value}
+                </div>
+                {card.delta && (
+                  <div className="text-sm text-emerald-600 font-medium">
+                    {card.delta}
+                  </div>
+                )}
+              </div>
+              <div className="mt-2 text-sm text-zinc-600">{card.subtitle}</div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

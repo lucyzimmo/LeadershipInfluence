@@ -44,10 +44,21 @@ export function computeJurisdictionConcentration(
   const jurisdictionData = Array.from(jurisdictionCounts.entries())
     .map(([jurisdictionId, count]) => {
       const jurisdiction = data.jurisdictions.find((j) => j.id === jurisdictionId);
+
+      // Determine type from estimated_name or level
+      let type = 'unknown';
+      const name = jurisdiction?.estimated_name || jurisdiction?.name || 'Unknown';
+
+      if (name.toLowerCase().includes('county')) type = 'county';
+      else if (name.toLowerCase().includes('city')) type = 'city';
+      else if (name.toLowerCase().includes('district')) type = 'district';
+      else if (name.toLowerCase().includes('state') && !name.toLowerCase().includes('district')) type = 'state';
+      else if (jurisdiction?.state) type = 'district'; // Default for state-level codes
+
       return {
         id: jurisdictionId,
-        name: jurisdiction?.name || 'Unknown',
-        type: jurisdiction?.type || 'unknown',
+        name,
+        type,
         verifiedCount: count,
         percentage: totalVoters > 0 ? (count / totalVoters) * 100 : 0,
       };

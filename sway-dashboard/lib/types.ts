@@ -65,7 +65,12 @@ export interface VoterVerification {
 export interface Jurisdiction {
   id: string;
   name: string;
-  type: 'county' | 'city' | 'district' | 'state' | 'federal';
+  estimated_name?: string;
+  type?: 'county' | 'city' | 'district' | 'state' | 'federal';
+  level?: string | null;
+  state?: string;
+  geoid?: string;
+  mtfcc?: string;
   geo_id?: string;
   parent_jurisdiction_id?: string;
   created_at?: string;
@@ -92,11 +97,14 @@ export interface Election {
 export interface BallotItem {
   id: string;
   election_id: string;
-  title: string;
-  type: 'race' | 'measure';
+  title?: string;
+  type?: 'race' | 'measure';
   race_id?: string;
   measure_id?: string;
   jurisdiction_id?: string;
+  num_selections_max?: number;
+  num_winners?: number;
+  is_ranked_choice?: boolean;
   created_at?: string;
   updated_at?: string;
 }

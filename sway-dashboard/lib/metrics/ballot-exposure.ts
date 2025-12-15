@@ -112,30 +112,52 @@ export function computeBallotExposure(
     // Skip ballot items with no supporters
     if (verifiedSupporters === 0) continue;
 
-    // Get office level and details if it's a race
+    // Get ballot options to find race/office information
     let officeLevel: OfficeLevel | undefined;
     let officeName: string | undefined;
+    let ballotTitle: string | undefined;
     let candidateCount = 0;
 
-    if (ballotItem.type === 'race' && ballotItem.race_id) {
-      const race = data.races.find((r) => r.id === ballotItem.race_id);
-      if (race) {
-        const officeTerm = data.officeTerms.find(
-          (ot) => ot.id === race.office_term_id
-        );
-        if (officeTerm) {
-          const office = data.offices.find((o) => o.id === officeTerm.office_id);
-          if (office) {
-            officeLevel = office.level;
-            officeName = office.name;
+    const ballotOptions = data.ballotItemOptions.filter(
+      (opt) => opt.ballot_item_id === ballotItem.id
+    );
+
+    // Try to find office information through candidacies
+    if (ballotOptions.length > 0) {
+      for (const option of ballotOptions) {
+        if (option.candidacy_id) {
+          const candidacy = data.candidacies.find(
+            (c) => c.id === option.candidacy_id
+          );
+          if (candidacy) {
+            candidateCount++;
+
+            if (!officeName) {
+              const race = data.races.find((r) => r.id === candidacy.race_id);
+              if (race) {
+                const officeTerm = data.officeTerms.find(
+                  (ot) => ot.id === race.office_term_id
+                );
+                if (officeTerm) {
+                  const office = data.offices.find((o) => o.id === officeTerm.office_id);
+                  if (office) {
+                    officeLevel = office.level;
+                    officeName = office.name;
+                  }
+                }
+              }
+            }
           }
         }
-
-        // Count candidates
-        candidateCount = data.candidacies.filter(
-          (c) => c.race_id === race.id
-        ).length;
       }
+    }
+
+    // Build a title
+    if (officeName) {
+      ballotTitle = officeName;
+    } else {
+      // Fallback: use election name + jurisdiction
+      ballotTitle = `${election.name}`;
     }
 
     // Default to local if not specified
@@ -152,16 +174,16 @@ export function computeBallotExposure(
       candidateCount
     );
 
-    const jurisdiction = ballotItem.jurisdiction_id
+    const jurisdictionObj = ballotItem.jurisdiction_id
       ? data.jurisdictions.find((j) => j.id === ballotItem.jurisdiction_id)
-          ?.name
       : undefined;
+    const jurisdiction = jurisdictionObj?.estimated_name || jurisdictionObj?.name;
 
     ballotExposures.push({
       ballotItem: {
         id: ballotItem.id,
-        title: ballotItem.title,
-        type: ballotItem.type,
+        title: ballotTitle,
+        type: candidateCount > 0 ? 'race' : 'measure',
         electionDate: election.poll_date,
         officeLevel: level,
         officeName,
