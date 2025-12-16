@@ -106,7 +106,7 @@ export default function DashboardPage() {
             <Card className="rounded-xl border-zinc-200/70 shadow-sm">
               <CardContent className="p-6">
                 <div className="mb-1">
-                  <div className="text-sm font-medium text-zinc-900">Network expansion</div>
+                  <div className="pt-5 text-sm font-medium text-zinc-900">Network expansion</div>
                   <div className="text-sm text-zinc-500">Leadership development & reach</div>
                 </div>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -150,7 +150,7 @@ export default function DashboardPage() {
               <Card className="rounded-xl border-zinc-200/70 shadow-sm">
                 <CardContent className="p-6">
                   <div className="mb-1">
-                    <div className="text-sm font-medium text-zinc-900">Coalition opportunities</div>
+                    <div className="pt-5 text-sm font-medium text-zinc-900">Coalition opportunities</div>
                     <div className="text-sm text-zinc-500">Potential partnerships with aligned leaders</div>
                   </div>
                   <div className="mt-4 space-y-3">
@@ -188,7 +188,7 @@ export default function DashboardPage() {
             <Card className="rounded-xl border-zinc-200/70 shadow-sm">
               <CardContent className="p-6">
                 <div className="mb-1">
-                  <div className="text-sm font-medium text-zinc-900">Movement velocity</div>
+                  <div className="pt-5 text-sm font-medium text-zinc-900">Movement velocity</div>
                   <div className="text-sm text-zinc-500">Growth momentum and projections</div>
                 </div>
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -40,7 +40,7 @@ export function OverviewCards({ summary }: OverviewCardsProps) {
         return (
           <Card key={card.title} className="rounded-xl border-zinc-200/70 shadow-sm">
             <CardContent className="p-6">
-              <div className="text-xs text-zinc-500">{card.title}</div>
+              <div className="pt-5 text-xs text-zinc-500">{card.title}</div>
               <div className="mt-1 flex items-baseline gap-2">
                 <div className="text-2xl font-semibold tracking-tight text-zinc-900">
                   {card.value}

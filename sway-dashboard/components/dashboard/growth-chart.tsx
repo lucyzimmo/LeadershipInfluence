@@ -44,7 +44,7 @@ export function GrowthChart({ data, weeklyGrowthRate }: GrowthChartProps) {
     <Card className="rounded-xl border-zinc-200/70 shadow-sm">
       <CardContent className="p-6">
         <div className="mb-1">
-          <div className="text-sm font-medium text-zinc-900">Growth trend</div>
+          <div className="pt-5 text-sm font-medium text-zinc-900">Growth trend</div>
           {weeklyGrowthRate !== undefined && (
             <div className="text-sm text-zinc-500">
               {weeklyGrowthRate > 0 ? '+' : ''}{weeklyGrowthRate.toFixed(1)}% average weekly

@@ -15,22 +15,16 @@ const urgencyConfig = {
     bgColor: "bg-white",
     borderColor: "border-red-200",
     textColor: "text-zinc-900",
-    badgeBg: "bg-red-50 text-red-700 border-red-200",
-    icon: Zap,
   },
   medium: {
     bgColor: "bg-white",
     borderColor: "border-amber-200",
     textColor: "text-zinc-900",
-    badgeBg: "bg-amber-50 text-amber-700 border-amber-200",
-    icon: Calendar,
   },
   low: {
     bgColor: "bg-white",
     borderColor: "border-zinc-200",
     textColor: "text-zinc-900",
-    badgeBg: "bg-zinc-100 text-zinc-700 border-zinc-200",
-    icon: Calendar,
   },
 };
 
@@ -81,7 +75,7 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
     <Card className="rounded-xl border-zinc-200/70 shadow-sm">
       <CardContent className="p-6">
         <div className="mb-1">
-          <div className="text-sm font-medium text-zinc-900">Upcoming elections</div>
+          <div className="pt-5 text-sm font-medium text-zinc-900">Upcoming elections</div>
           <div className="text-sm text-zinc-500">
             {sortedExposures.length} {leverageFilter !== 'all' ? `${leverageFilter} leverage ` : ''}opportunities
           </div>

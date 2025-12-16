@@ -22,10 +22,10 @@ export function JurisdictionTable({ data }: JurisdictionTableProps) {
   const concentration = interpretConcentration(data.concentrationIndex);
 
   return (
-    <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-      <CardContent className="p-6">
+    <Card className="pt-5 rounded-xl border-zinc-200/70 shadow-sm">
+      <CardContent className="">
         <div className="mb-1">
-          <div className="text-sm font-medium text-zinc-900">Geographic concentration</div>
+          <div className="pt-5 text-sm font-medium text-zinc-900">Geographic concentration</div>
           <div className="text-sm text-zinc-500">
             {concentration.label} concentration (HHI: {data.concentrationIndex.toFixed(2)})
           </div>
