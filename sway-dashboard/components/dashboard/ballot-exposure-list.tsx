@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Vote, Calendar, MapPin, Zap, Crown, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import type { BallotExposure } from "@/lib/types";
 import { differenceInDays, parseISO } from "date-fns";
 
@@ -31,30 +31,6 @@ const urgencyConfig = {
     textColor: "text-zinc-900",
     badgeBg: "bg-zinc-100 text-zinc-700 border-zinc-200",
     icon: Calendar,
-  },
-};
-
-const leverageConfig = {
-  kingmaker: {
-    bgColor: "bg-purple-50",
-    textColor: "text-purple-700",
-    borderColor: "border-purple-200",
-    icon: Crown,
-    label: "Potential swing influence",
-  },
-  significant: {
-    bgColor: "bg-emerald-50",
-    textColor: "text-emerald-700",
-    borderColor: "border-emerald-200",
-    icon: TrendingUp,
-    label: "High leverage",
-  },
-  marginal: {
-    bgColor: "bg-zinc-50",
-    textColor: "text-zinc-700",
-    borderColor: "border-zinc-200",
-    icon: Vote,
-    label: "Meaningful leverage",
   },
 };
 
@@ -203,9 +179,6 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
               new Date()
             );
             const urgency = urgencyConfig[exposure.urgency];
-            const leverage = exposure.leverageLevel
-              ? leverageConfig[exposure.leverageLevel]
-              : null;
 
             return (
               <div
@@ -214,18 +187,11 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm font-medium text-zinc-900">
-                        {exposure.ballotItem.title ||
-                         (exposure.ballotItem.officeName ||
-                          `${exposure.ballotItem.type === 'race' ? 'Race' : 'Measure'} in ${exposure.jurisdiction || 'Unknown'}`)}
-                      </h3>
-                      {leverage && (
-                        <span className={`text-xs px-2 py-0.5 rounded border ${leverage.bgColor} ${leverage.textColor} ${leverage.borderColor}`}>
-                          {leverage.label}
-                        </span>
-                      )}
-                    </div>
+                    <h3 className="text-sm font-medium text-zinc-900">
+                      {exposure.ballotItem.title ||
+                       (exposure.ballotItem.officeName ||
+                        `${exposure.ballotItem.type === 'race' ? 'Race' : 'Measure'} in ${exposure.jurisdiction || 'Unknown'}`)}
+                    </h3>
 
                     <div className="mt-2 flex items-center gap-4 text-sm text-zinc-600 flex-wrap">
                       <span className="font-medium text-emerald-700">
