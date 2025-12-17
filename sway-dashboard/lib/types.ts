@@ -289,11 +289,29 @@ export interface ActionableInsight {
 // Complete Dashboard Model
 // ============================================================================
 
+export interface LeaderData {
+  id: string;
+  name: string;
+  slug: string;
+  totalSupporters: number;
+  totalViewpoints: number;
+  groupCount: number;
+  groups?: Array<{
+    id: string;
+    title: string;
+    supporterCount: number;
+  }>;
+}
+
 export interface DashboardModel {
   summary: {
     verifiedVoters: number;
     verificationRate: number;
     derivativeLeaders: number;
+    viewpoints?: number;
+    topics?: string[];
+    topicSupporterCounts?: Record<string, number>;
+    topicVerifiedVoterCounts?: Record<string, number>;
     lastUpdated: string;
   };
   focusThisWeek: ActionableInsight[];
@@ -304,6 +322,7 @@ export interface DashboardModel {
   electoralLandscape?: ElectoralLandscape[];
   coalitionOpportunities?: CoalitionOpportunity[];
   velocity?: MovementVelocity;
+  leaderComparison?: LeaderData[];
 }
 
 // ============================================================================

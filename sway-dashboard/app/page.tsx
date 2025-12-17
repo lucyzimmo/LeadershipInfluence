@@ -8,6 +8,8 @@ import { FocusSection } from "@/components/dashboard/focus-section";
 import { GrowthChart } from "@/components/dashboard/growth-chart";
 import { JurisdictionTable } from "@/components/dashboard/jurisdiction-table";
 import { BallotExposureList } from "@/components/dashboard/ballot-exposure-list";
+import { LeaderComparison } from "@/components/dashboard/leader-comparison";
+import { TopicAnalysis } from "@/components/dashboard/topic-analysis";
 
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardModel | null>(null);
@@ -82,8 +84,30 @@ export default function DashboardPage() {
             <FocusSection insights={dashboard.focusThisWeek} />
           )}
 
+          {/* Leader Comparison */}
+          {dashboard.leaderComparison && dashboard.leaderComparison.length > 0 && (
+            <LeaderComparison
+              leaders={dashboard.leaderComparison}
+              yourStats={{
+                supporters: dashboard.summary.verifiedVoters,
+                viewpoints: dashboard.summary.viewpoints,
+              }}
+              yourTopics={dashboard.summary.topics}
+              topicSupporterCounts={dashboard.summary.topicSupporterCounts}
+            />
+          )}
+
           {/* Overview Cards */}
           <OverviewCards summary={dashboard.summary} />
+
+          {/* Topic Analysis */}
+          {dashboard.summary.topics && dashboard.summary.topics.length > 0 && (
+            <TopicAnalysis
+              topics={dashboard.summary.topics}
+              topicSupporterCounts={dashboard.summary.topicSupporterCounts || {}}
+              topicVerifiedVoterCounts={dashboard.summary.topicVerifiedVoterCounts || {}}
+            />
+          )}
 
           {/* Growth Chart */}
           {dashboard.verifiedVoters.growthTrend.length > 0 && (

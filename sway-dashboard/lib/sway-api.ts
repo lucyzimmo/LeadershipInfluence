@@ -131,8 +131,80 @@ export async function fetchCivicEngineData(
 }
 
 /**
+ * Fetch top leaders by supporter count for comparison
+ */
+export async function fetchTopLeaders(limit: number = 50): Promise<any[] | null> {
+  const query = `
+    query GetTopLeaders($limit: Int!) {
+      profiles(
+        where: {
+          profileViewpointGroupRels: {
+            type: { _eq: LEADER }
+          }
+        }
+        limit: $limit
+      ) {
+        id
+        displayNameLong
+        profileViewpointGroupRels(where: { type: { _eq: LEADER } }) {
+          viewpointGroup {
+            id
+            title
+            profileViewpointGroupRels(where: { type: { _eq: SUPPORTER } }) {
+              id
+            }
+          }
+        }
+        profileViewpointRels {
+          id
+        }
+      }
+    }
+  `;
+
+  const result = await querySwayAPI<{ profiles: any[] }>(query, { limit });
+
+  if (!result?.profiles) {
+    return null;
+  }
+
+  // Transform data with both supporter count and viewpoint count
+  const leaders = result.profiles.map(profile => {
+    const totalViewpoints = profile.profileViewpointRels?.length || 0;
+    const groupCount = profile.profileViewpointGroupRels?.length || 0;
+
+    // Calculate total supporters across all groups
+    const totalSupporters = profile.profileViewpointGroupRels?.reduce(
+      (sum: number, rel: any) => {
+        const supporterCount = rel.viewpointGroup?.profileViewpointGroupRels?.length || 0;
+        return sum + supporterCount;
+      },
+      0
+    ) || 0;
+
+    const groups = profile.profileViewpointGroupRels?.map((rel: any) => ({
+      id: rel.viewpointGroup?.id,
+      title: rel.viewpointGroup?.title,
+      supporterCount: rel.viewpointGroup?.profileViewpointGroupRels?.length || 0,
+    })) || [];
+
+    return {
+      id: profile.id,
+      name: profile.displayNameLong,
+      slug: profile.id,
+      totalSupporters,
+      totalViewpoints,
+      groupCount,
+      groups,
+    };
+  });
+
+  // Sort by supporter count descending
+  return leaders.sort((a, b) => b.totalSupporters - a.totalSupporters);
+}
+
+/**
  * Find adjacent leaders in the same jurisdictions
- * (Simplified implementation - would need actual GraphQL schema)
  */
 export async function findAdjacentLeaders(
   jurisdictionIds: string[]
@@ -141,10 +213,10 @@ export async function findAdjacentLeaders(
     return null;
   }
 
-  // This would use the actual Sway API schema
-  // For now, return null as we don't have the full schema
+  // Use the top leaders function for now
+  // In production, you'd filter by overlapping jurisdictions
   console.log('Adjacent leaders query would use:', jurisdictionIds);
-  return null;
+  return await fetchTopLeaders(20);
 }
 
 /**

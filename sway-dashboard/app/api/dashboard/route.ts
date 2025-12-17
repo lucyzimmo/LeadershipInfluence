@@ -10,6 +10,7 @@ import {
   findAdjacentLeaders,
   fetchBenchmarkGroups,
   fetchUpcomingElections,
+  fetchTopLeaders,
 } from '@/lib/sway-api';
 import { analyzeElectoralLandscape } from '@/lib/api-enhanced/electoral-landscape';
 import { findCoalitionOpportunities } from '@/lib/api-enhanced/coalition-finder';
@@ -55,11 +56,12 @@ export async function GET() {
       const jurisdictionIds = jurisdictions.topJurisdictions.map((j) => j.id);
 
       // Fetch API data in parallel
-      const [civicData, adjacentLeaders, benchmarkGroups, upcomingElections] = await Promise.all([
+      const [civicData, adjacentLeaders, benchmarkGroups, upcomingElections, topLeaders] = await Promise.all([
         fetchCivicEngineData(geoIds),
         findAdjacentLeaders(jurisdictionIds),
         fetchBenchmarkGroups(verifiedVoters.current),
         fetchUpcomingElections(geoIds),
+        fetchTopLeaders(50),
       ]);
 
       // Log API elections if received
@@ -87,6 +89,12 @@ export async function GET() {
       // Store upcoming elections for ballot exposure computation
       if (upcomingElections) {
         apiEnhancements.upcomingElections = upcomingElections;
+      }
+
+      // Store leader comparison data
+      if (topLeaders && topLeaders.length > 0) {
+        apiEnhancements.leaderComparison = topLeaders;
+        console.log(`Fetched ${topLeaders.length} leaders for comparison`);
       }
     } catch (apiError) {
       console.warn('API enhancement failed, using static data only:', apiError);
@@ -119,11 +127,49 @@ export async function GET() {
     console.timeEnd('Derive actions');
 
     // 5. Build complete dashboard model
+    // Count viewpoints (only count those with titles)
+    const yourTopics = staticData.viewpointGroups.map(g => g.title).filter((t): t is string => !!t);
+    const yourViewpoints = yourTopics.length;
+
+    // Calculate supporter counts and verified voter counts per topic
+    const topicSupporterCounts: Record<string, number> = {};
+    const topicVerifiedVoterCounts: Record<string, number> = {};
+
+    staticData.viewpointGroups.forEach(group => {
+      if (group.title) {
+        // Get all supporter relationships for this topic
+        const supporterRels = staticData.profileViewpointGroupRels.filter(
+          rel => rel.viewpoint_group_id === group.id && rel.type === 'supporter'
+        );
+
+        topicSupporterCounts[group.title] = supporterRels.length;
+
+        // Calculate verified voters for this topic
+        const verifiedCount = supporterRels.filter(rel => {
+          // Find the profile for this supporter
+          const profile = staticData.profiles.find(p => p.id === rel.profile_id);
+          if (!profile) return false;
+
+          // Check if this person is verified
+          const verification = staticData.voterVerifications.find(
+            v => v.person_id === profile.person_id && v.is_fully_verified
+          );
+          return !!verification;
+        }).length;
+
+        topicVerifiedVoterCounts[group.title] = verifiedCount;
+      }
+    });
+
     const dashboardModel: DashboardModel = {
       summary: {
         verifiedVoters: verifiedVoters.current,
         verificationRate: verifiedVoters.verificationRate,
         derivativeLeaders: networkExpansion.derivativeLeaders,
+        viewpoints: yourViewpoints,
+        topics: yourTopics,
+        topicSupporterCounts,
+        topicVerifiedVoterCounts,
         lastUpdated: new Date().toISOString(),
       },
       focusThisWeek,

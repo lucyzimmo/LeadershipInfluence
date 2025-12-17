@@ -9,6 +9,11 @@ interface OverviewCardsProps {
 }
 
 export function OverviewCards({ summary }: OverviewCardsProps) {
+  // Calculate total supporters across all topics
+  const totalSupporters = summary.topicSupporterCounts
+    ? Object.values(summary.topicSupporterCounts).reduce((sum, count) => sum + count, 0)
+    : 0;
+
   const cards = [
     {
       title: "Verified voters",
@@ -16,6 +21,13 @@ export function OverviewCards({ summary }: OverviewCardsProps) {
       subtitle: `${Math.round(summary.verificationRate)}% of supporters`,
       delta: null,
       icon: CheckCircle2,
+    },
+    {
+      title: "Total supporters",
+      value: totalSupporters.toLocaleString(),
+      subtitle: "Across all topics (unverified)",
+      delta: null,
+      icon: Users,
     },
     {
       title: "Verification rate",
@@ -34,7 +46,7 @@ export function OverviewCards({ summary }: OverviewCardsProps) {
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-4">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
