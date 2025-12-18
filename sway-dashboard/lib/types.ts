@@ -199,6 +199,7 @@ export interface JurisdictionConcentration {
     id: string;
     name: string;
     type: string;
+    geoid?: string;
     verifiedCount: number;
     percentage: number;
   }>;
@@ -294,6 +295,10 @@ export interface LeaderData {
   name: string;
   slug: string;
   totalSupporters: number;
+  verifiedVoters: number;
+  verificationRate: number;
+  growthRate: number;
+  reach: number;
   totalViewpoints: number;
   groupCount: number;
   groups?: Array<{
@@ -301,6 +306,7 @@ export interface LeaderData {
     title: string;
     supporterCount: number;
   }>;
+  jurisdictions?: string[];
 }
 
 export interface DashboardModel {
@@ -312,6 +318,9 @@ export interface DashboardModel {
     topics?: string[];
     topicSupporterCounts?: Record<string, number>;
     topicVerifiedVoterCounts?: Record<string, number>;
+    growthRate?: number;
+    reach?: number;
+    jurisdictions?: string[];
     lastUpdated: string;
   };
   focusThisWeek: ActionableInsight[];

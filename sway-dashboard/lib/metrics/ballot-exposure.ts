@@ -303,6 +303,16 @@ export function computeBallotExposure(
     });
   }
 
-  // Sort by leverage score (descending)
-  return ballotExposures.sort((a, b) => b.leverageScore - a.leverageScore);
+  // Sort by election date (ascending - sooner first), then by leverage score (descending)
+  return ballotExposures.sort((a, b) => {
+    const dateA = parseISO(a.ballotItem.electionDate);
+    const dateB = parseISO(b.ballotItem.electionDate);
+
+    // First, sort by date (closer elections first)
+    const dateDiff = dateA.getTime() - dateB.getTime();
+    if (dateDiff !== 0) return dateDiff;
+
+    // If dates are the same, sort by leverage score (higher first)
+    return b.leverageScore - a.leverageScore;
+  });
 }

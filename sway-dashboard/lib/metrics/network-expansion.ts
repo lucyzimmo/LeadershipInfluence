@@ -17,7 +17,7 @@ export function computeNetworkExpansion(
     data.profileViewpointGroupRels
       .filter(
         (rel) =>
-          rel.viewpoint_group_id === MAIN_GROUP_ID && rel.role === 'supporter'
+          rel.viewpoint_group_id === MAIN_GROUP_ID && rel.type === 'supporter'
       )
       .map((rel) => rel.profile_id)
   );
@@ -28,7 +28,7 @@ export function computeNetworkExpansion(
 
   for (const rel of data.profileViewpointGroupRels) {
     if (
-      rel.role === 'leader' &&
+      rel.type === 'leader' &&
       rel.viewpoint_group_id !== MAIN_GROUP_ID &&
       mainGroupSupporters.has(rel.profile_id)
     ) {

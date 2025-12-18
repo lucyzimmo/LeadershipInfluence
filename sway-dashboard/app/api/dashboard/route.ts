@@ -145,21 +145,37 @@ export async function GET() {
         topicSupporterCounts[group.title] = supporterRels.length;
 
         // Calculate verified voters for this topic
-        const verifiedCount = supporterRels.filter(rel => {
-          // Find the profile for this supporter
-          const profile = staticData.profiles.find(p => p.id === rel.profile_id);
-          if (!profile) return false;
+        // Start from verified voters and check if they have any relationship to this topic
+        let verifiedCount = 0;
 
-          // Check if this person is verified
-          const verification = staticData.voterVerifications.find(
-            v => v.person_id === profile.person_id && v.is_fully_verified
+        staticData.voterVerifications.forEach(verification => {
+          if (!verification.is_fully_verified) return;
+
+          // Find profile for this verified voter
+          const profile = staticData.profiles.find(p => p.person_id === verification.person_id);
+          if (!profile) return;
+
+          // Check if this profile has ANY relationship to this topic
+          const hasRelationship = staticData.profileViewpointGroupRels.some(
+            rel => rel.profile_id === profile.id && rel.viewpoint_group_id === group.id
           );
-          return !!verification;
-        }).length;
+
+          if (hasRelationship) {
+            verifiedCount++;
+          }
+        });
 
         topicVerifiedVoterCounts[group.title] = verifiedCount;
       }
     });
+
+    // Calculate your growth rate and reach
+    const yourGrowthRate = verifiedVoters.weeklyGrowthRate || 0;
+    const yourReach = jurisdictions.topJurisdictions.length;
+    const yourJurisdictions = jurisdictions.topJurisdictions.map(j => {
+      const jurisdiction = staticData.jurisdictions.find(jur => jur.id === j.id);
+      return jurisdiction?.name || '';
+    }).filter(name => name);
 
     const dashboardModel: DashboardModel = {
       summary: {
@@ -170,6 +186,9 @@ export async function GET() {
         topics: yourTopics,
         topicSupporterCounts,
         topicVerifiedVoterCounts,
+        growthRate: yourGrowthRate,
+        reach: yourReach,
+        jurisdictions: yourJurisdictions,
         lastUpdated: new Date().toISOString(),
       },
       focusThisWeek,

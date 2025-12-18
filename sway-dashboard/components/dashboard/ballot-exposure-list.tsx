@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, ChevronDown, ChevronUp } from "lucide-react";
+import { MapPin, ChevronDown, ChevronUp, Search, X } from "lucide-react";
 import type { BallotExposure } from "@/lib/types";
 import { differenceInDays, parseISO } from "date-fns";
 
@@ -28,32 +28,25 @@ const urgencyConfig = {
   },
 };
 
-type SortOption = 'leverage' | 'date' | 'location';
-type LeverageFilter = 'all' | 'high' | 'medium' | 'low';
+type SortOption = 'leverage' | 'date';
 
 export function BallotExposureList({ exposures }: BallotExposureListProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('leverage');
-  const [leverageFilter, setLeverageFilter] = useState<LeverageFilter>('all');
+  const [locationSearch, setLocationSearch] = useState('');
 
   if (exposures.length === 0) {
     return null;
   }
 
-  // Map leverage levels for filtering
-  const getLeverageCategory = (level?: string): 'high' | 'medium' | 'low' => {
-    if (level === 'kingmaker' || level === 'significant') return 'high';
-    if (level === 'marginal') return 'low';
-    return 'medium';
-  };
-
-  // Filter by leverage
-  let filteredExposures = exposures;
-  if (leverageFilter !== 'all') {
-    filteredExposures = exposures.filter(exp =>
-      getLeverageCategory(exp.leverageLevel) === leverageFilter
-    );
-  }
+  // Filter by location search
+  const filteredExposures = exposures.filter((exposure) => {
+    if (!locationSearch) return true;
+    const searchLower = locationSearch.toLowerCase();
+    const jurisdiction = (exposure.jurisdiction || '').toLowerCase();
+    const title = (exposure.ballotItem.title || '').toLowerCase();
+    return jurisdiction.includes(searchLower) || title.includes(searchLower);
+  });
 
   // Sort exposures
   const sortedExposures = [...filteredExposures].sort((a, b) => {
@@ -61,10 +54,6 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
       return b.leverageScore - a.leverageScore;
     } else if (sortBy === 'date') {
       return new Date(a.ballotItem.electionDate).getTime() - new Date(b.ballotItem.electionDate).getTime();
-    } else if (sortBy === 'location') {
-      const locA = a.jurisdiction || '';
-      const locB = b.jurisdiction || '';
-      return locA.localeCompare(locB);
     }
     return 0;
   });
@@ -77,12 +66,33 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
         <div className="mb-1">
           <div className="pt-5 text-sm font-medium text-zinc-900">Upcoming elections</div>
           <div className="text-sm text-zinc-500">
-            {sortedExposures.length} {leverageFilter !== 'all' ? `${leverageFilter} leverage ` : ''}opportunities
+            {sortedExposures.length} {locationSearch ? `of ${exposures.length}` : ''} opportunities to influence
           </div>
         </div>
 
-        {/* Filter and Sort Controls */}
-        <div className="mt-4 flex flex-wrap gap-3 items-center">
+        {/* Search and Sort Controls */}
+        <div className="mt-4 space-y-3">
+          {/* Location Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Search by location or election name..."
+              value={locationSearch}
+              onChange={(e) => setLocationSearch(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 text-sm border border-zinc-200 rounded-md bg-white text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+            />
+            {locationSearch && (
+              <button
+                onClick={() => setLocationSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Sort Controls */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-zinc-600">Sort by:</span>
             <div className="flex gap-1">
@@ -106,104 +116,62 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
               >
                 Date
               </button>
-              <button
-                onClick={() => setSortBy('location')}
-                className={`text-xs px-3 py-1 rounded-md transition-colors ${
-                  sortBy === 'location'
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                }`}
-              >
-                Location
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-600">Leverage:</span>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setLeverageFilter('all')}
-                className={`text-xs px-3 py-1 rounded-md transition-colors ${
-                  leverageFilter === 'all'
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setLeverageFilter('high')}
-                className={`text-xs px-3 py-1 rounded-md transition-colors ${
-                  leverageFilter === 'high'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                }`}
-              >
-                High leverage
-              </button>
-              <button
-                onClick={() => setLeverageFilter('medium')}
-                className={`text-xs px-3 py-1 rounded-md transition-colors ${
-                  leverageFilter === 'medium'
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
-                }`}
-              >
-                Medium leverage
-              </button>
-              <button
-                onClick={() => setLeverageFilter('low')}
-                className={`text-xs px-3 py-1 rounded-md transition-colors ${
-                  leverageFilter === 'low'
-                    ? 'bg-zinc-600 text-white'
-                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                }`}
-              >
-                Low leverage
-              </button>
             </div>
           </div>
         </div>
 
         <div className="mt-4 space-y-3 max-h-[600px] overflow-y-auto">
-          {sortedExposures.slice(0, displayCount).map((exposure) => {
-            const daysUntil = differenceInDays(
-              parseISO(exposure.ballotItem.electionDate),
-              new Date()
-            );
-            const urgency = urgencyConfig[exposure.urgency];
-
-            return (
-              <div
-                key={exposure.ballotItem.id}
-                className={`p-4 rounded-lg border ${urgency.borderColor} ${urgency.bgColor}`}
+          {sortedExposures.length === 0 ? (
+            <div className="p-6 rounded-lg bg-zinc-50 border border-zinc-200 text-center">
+              <div className="text-sm text-zinc-600">
+                No elections found matching "{locationSearch}"
+              </div>
+              <button
+                onClick={() => setLocationSearch('')}
+                className="mt-2 text-xs text-zinc-700 hover:text-zinc-900 underline"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-zinc-900">
-                      {exposure.ballotItem.title ||
-                       (exposure.ballotItem.officeName ||
-                        `${exposure.ballotItem.type === 'race' ? 'Race' : 'Measure'} in ${exposure.jurisdiction || 'Unknown'}`)}
-                    </h3>
+                Clear search
+              </button>
+            </div>
+          ) : (
+            sortedExposures.slice(0, displayCount).map((exposure) => {
+              const daysUntil = differenceInDays(
+                parseISO(exposure.ballotItem.electionDate),
+                new Date()
+              );
+              const urgency = urgencyConfig[exposure.urgency];
 
-                    <div className="mt-2 flex items-center gap-4 text-sm text-zinc-600 flex-wrap">
-                      <span className="font-medium text-emerald-700">
-                        {exposure.verifiedSupporters} verified voters
-                      </span>
-                      <span>{daysUntil} days until election</span>
-                      {exposure.jurisdiction && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {exposure.jurisdiction}
+              return (
+                <div
+                  key={exposure.ballotItem.id}
+                  className={`p-4 rounded-lg border ${urgency.borderColor} ${urgency.bgColor}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-zinc-900">
+                        {exposure.ballotItem.title ||
+                         (exposure.ballotItem.officeName ||
+                          `${exposure.ballotItem.type === 'race' ? 'Race' : 'Measure'} in ${exposure.jurisdiction || 'Unknown'}`)}
+                      </h3>
+
+                      <div className="mt-2 flex items-center gap-4 text-sm text-zinc-600 flex-wrap">
+                        <span className="font-medium text-emerald-700">
+                          {exposure.verifiedSupporters} verified voters
                         </span>
-                      )}
+                        <span>{daysUntil} days until election</span>
+                        {exposure.jurisdiction && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {exposure.jurisdiction}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {sortedExposures.length > 10 && (
@@ -223,12 +191,6 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
               </>
             )}
           </button>
-        )}
-
-        {sortedExposures.length === 0 && (
-          <div className="mt-4 text-center text-sm text-zinc-500 py-8">
-            No elections match the selected filter
-          </div>
         )}
       </CardContent>
     </Card>

@@ -146,41 +146,136 @@ export async function fetchTopLeaders(limit: number = 50): Promise<any[] | null>
       ) {
         id
         displayNameLong
+        personId
         profileViewpointGroupRels(where: { type: { _eq: LEADER } }) {
           viewpointGroup {
             id
             title
-            profileViewpointGroupRels(where: { type: { _eq: SUPPORTER } }) {
+            profileViewpointGroupRels {
               id
+              type
+              profile {
+                id
+                personId
+              }
             }
           }
         }
-        profileViewpointRels {
-          id
-        }
+      }
+      voterVerifications {
+        id
+        personId
+        isFullyVerified
+        createdAt
+      }
+      personVoterVerificationRels {
+        personId
+        voterVerificationId
+        jurisdictionId
+      }
+      jurisdictions {
+        id
+        name
+        state
       }
     }
   `;
 
-  const result = await querySwayAPI<{ profiles: any[] }>(query, { limit });
+  const result = await querySwayAPI<{
+    profiles: any[];
+    voterVerifications: any[];
+    personVoterVerificationRels: any[];
+    jurisdictions: any[];
+  }>(query, { limit });
 
   if (!result?.profiles) {
     return null;
   }
 
-  // Transform data with both supporter count and viewpoint count
+  // Build lookup maps for performance
+  const verificationsByPerson = new Map<string, any[]>();
+  result.voterVerifications?.forEach(v => {
+    if (!verificationsByPerson.has(v.personId)) {
+      verificationsByPerson.set(v.personId, []);
+    }
+    verificationsByPerson.get(v.personId)!.push(v);
+  });
+
+  const jurisdictionsByPerson = new Map<string, Set<string>>();
+  result.personVoterVerificationRels?.forEach(rel => {
+    if (!jurisdictionsByPerson.has(rel.personId)) {
+      jurisdictionsByPerson.set(rel.personId, new Set());
+    }
+    jurisdictionsByPerson.get(rel.personId)!.add(rel.jurisdictionId);
+  });
+
+  const jurisdictionsById = new Map(
+    result.jurisdictions?.map(j => [j.id, j]) || []
+  );
+
+  // Transform data with verification metrics
   const leaders = result.profiles.map(profile => {
-    const totalViewpoints = profile.profileViewpointRels?.length || 0;
+    // Count viewpoints as the number of viewpoint groups they lead
+    const totalViewpoints = profile.profileViewpointGroupRels?.length || 0;
     const groupCount = profile.profileViewpointGroupRels?.length || 0;
 
-    // Calculate total supporters across all groups
-    const totalSupporters = profile.profileViewpointGroupRels?.reduce(
-      (sum: number, rel: any) => {
-        const supporterCount = rel.viewpointGroup?.profileViewpointGroupRels?.length || 0;
-        return sum + supporterCount;
-      },
-      0
-    ) || 0;
+    // Get all supporters across all groups
+    const allSupporterPersonIds = new Set<string>();
+    const allVerifiedVoterPersonIds = new Set<string>();
+
+    profile.profileViewpointGroupRels?.forEach((rel: any) => {
+      rel.viewpointGroup?.profileViewpointGroupRels?.forEach((supporterRel: any) => {
+        if (supporterRel.profile?.personId) {
+          allSupporterPersonIds.add(supporterRel.profile.personId);
+
+          // Check if this person has verified voter status
+          const verifications = verificationsByPerson.get(supporterRel.profile.personId) || [];
+          if (verifications.some(v => v.isFullyVerified)) {
+            allVerifiedVoterPersonIds.add(supporterRel.profile.personId);
+          }
+        }
+      });
+    });
+
+    const totalSupporters = allSupporterPersonIds.size;
+    const verifiedVoters = allVerifiedVoterPersonIds.size;
+    const verificationRate = totalSupporters > 0 ? verifiedVoters / totalSupporters : 0;
+
+    // Calculate growth rate (30-day trend)
+    const now = Date.now();
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+    let recentVerifications = 0;
+
+    Array.from(allVerifiedVoterPersonIds).forEach(personId => {
+      const verifications = verificationsByPerson.get(personId) || [];
+      const recentlyVerified = verifications.some(v =>
+        v.isFullyVerified && new Date(v.createdAt).getTime() > thirtyDaysAgo
+      );
+      if (recentlyVerified) {
+        recentVerifications++;
+      }
+    });
+
+    const growthRate = (recentVerifications / 30) * 7; // Weekly growth rate
+
+    // Get unique jurisdictions (reach)
+    const uniqueJurisdictions = new Set<string>();
+    const jurisdictionNames: string[] = [];
+
+    Array.from(allVerifiedVoterPersonIds).forEach(personId => {
+      const personJurisdictions = jurisdictionsByPerson.get(personId);
+      if (personJurisdictions) {
+        personJurisdictions.forEach(jId => {
+          uniqueJurisdictions.add(jId);
+          const jurisdiction = jurisdictionsById.get(jId);
+          if (jurisdiction && !jurisdictionNames.includes(jurisdiction.name)) {
+            jurisdictionNames.push(jurisdiction.name);
+          }
+        });
+      }
+    });
+
+    const reach = uniqueJurisdictions.size;
 
     const groups = profile.profileViewpointGroupRels?.map((rel: any) => ({
       id: rel.viewpointGroup?.id,
@@ -193,14 +288,19 @@ export async function fetchTopLeaders(limit: number = 50): Promise<any[] | null>
       name: profile.displayNameLong,
       slug: profile.id,
       totalSupporters,
+      verifiedVoters,
+      verificationRate,
+      growthRate,
+      reach,
       totalViewpoints,
       groupCount,
       groups,
+      jurisdictions: jurisdictionNames,
     };
   });
 
-  // Sort by supporter count descending
-  return leaders.sort((a, b) => b.totalSupporters - a.totalSupporters);
+  // Sort by verified voters descending (default)
+  return leaders.sort((a, b) => b.verifiedVoters - a.verifiedVoters);
 }
 
 /**

@@ -45,20 +45,29 @@ export function computeJurisdictionConcentration(
     .map(([jurisdictionId, count]) => {
       const jurisdiction = data.jurisdictions.find((j) => j.id === jurisdictionId);
 
-      // Determine type from estimated_name or level
+      // Determine type based on geoid pattern and name
       let type = 'unknown';
       const name = jurisdiction?.estimated_name || jurisdiction?.name || 'Unknown';
+      const geoid = jurisdiction?.geoid;
 
-      if (name.toLowerCase().includes('county')) type = 'county';
-      else if (name.toLowerCase().includes('city')) type = 'city';
-      else if (name.toLowerCase().includes('district')) type = 'district';
-      else if (name.toLowerCase().includes('state') && !name.toLowerCase().includes('district')) type = 'state';
-      else if (jurisdiction?.state) type = 'district'; // Default for state-level codes
+      // States have 2-digit FIPS codes (geoid)
+      if (geoid && geoid.length === 2) {
+        type = 'state';
+      } else if (name.toLowerCase().includes('county')) {
+        type = 'county';
+      } else if (name.toLowerCase().includes('city')) {
+        type = 'city';
+      } else if (name.toLowerCase().includes('district')) {
+        type = 'district';
+      } else if (jurisdiction?.state) {
+        type = 'district'; // Default for state-level codes
+      }
 
       return {
         id: jurisdictionId,
         name,
         type,
+        geoid,
         verifiedCount: count,
         percentage: totalVoters > 0 ? (count / totalVoters) * 100 : 0,
       };

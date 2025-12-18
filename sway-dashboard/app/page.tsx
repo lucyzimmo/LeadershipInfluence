@@ -10,6 +10,9 @@ import { JurisdictionTable } from "@/components/dashboard/jurisdiction-table";
 import { BallotExposureList } from "@/components/dashboard/ballot-exposure-list";
 import { LeaderComparison } from "@/components/dashboard/leader-comparison";
 import { TopicAnalysis } from "@/components/dashboard/topic-analysis";
+import { GeographicMap } from "@/components/dashboard/geographic-map";
+import { InfluenceSummary } from "@/components/dashboard/influence-summary";
+import { HighLeverageZones } from "@/components/dashboard/high-leverage-zones";
 
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardModel | null>(null);
@@ -63,10 +66,10 @@ export default function DashboardPage() {
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-              Leader Influence
+              Leader Influence Dashboard
             </h1>
-            <p className="text-sm text-zinc-500">
-              Deployable voting power, grounded in verified voters and upcoming ballots
+            <p className="text-sm text-zinc-600 max-w-2xl">
+              Where your verified voters can decisively influence upcoming ballot outcomes — and what actions will increase that influence.
             </p>
           </div>
           <div className="text-right">
@@ -91,8 +94,12 @@ export default function DashboardPage() {
               yourStats={{
                 supporters: dashboard.summary.verifiedVoters,
                 viewpoints: dashboard.summary.viewpoints,
+                verificationRate: dashboard.summary.verificationRate,
+                growthRate: dashboard.summary.growthRate,
+                reach: dashboard.summary.reach,
               }}
               yourTopics={dashboard.summary.topics}
+              yourJurisdictions={dashboard.summary.jurisdictions}
               topicSupporterCounts={dashboard.summary.topicSupporterCounts}
             />
           )}
@@ -117,8 +124,8 @@ export default function DashboardPage() {
             />
           )}
 
-          {/* Jurisdiction Concentration */}
-          <JurisdictionTable data={dashboard.jurisdictions} />
+          {/* Geographic Map */}
+          <GeographicMap data={dashboard.jurisdictions} />
 
           {/* Ballot Exposure */}
           {dashboard.ballotExposure.length > 0 && (
