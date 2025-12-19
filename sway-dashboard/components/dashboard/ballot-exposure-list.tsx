@@ -155,8 +155,14 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
                       </h3>
 
                       <div className="flex items-center gap-5 text-sm flex-wrap">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                          {exposure.ballotItem.type === 'measure' ? 'Measure' : 'Race'}
+                        </span>
                         <span className="font-bold text-emerald-700">
-                          {exposure.verifiedSupporters} verified voters
+                          {exposure.potentialSupporters?.toLocaleString() ?? exposure.verifiedSupporters.toLocaleString()} supporters
+                        </span>
+                        <span className="font-medium text-zinc-700">
+                          {exposure.verifiedSupporters.toLocaleString()} verified
                         </span>
                         <span className="font-medium text-zinc-700">{daysUntil} days until election</span>
                         {exposure.jurisdiction && (

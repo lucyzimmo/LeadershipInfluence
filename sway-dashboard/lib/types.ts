@@ -4,8 +4,16 @@
 
 export interface ViewpointGroup {
   id: string;
-  name: string;
+  name?: string;
+  title?: string;
   description?: string;
+  current_slug_id?: string;
+  influence_target_notes?: string;
+  is_searchable?: boolean;
+  is_public?: boolean;
+  direct_embedding_id?: string;
+  aggregate_embedding_id?: string;
+  title_embedding_id?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -112,7 +120,8 @@ export interface BallotItem {
 export interface BallotItemOption {
   id: string;
   ballot_item_id: string;
-  title: string;
+  title?: string;
+  text?: string;
   candidacy_id?: string;
   option_type?: 'yes' | 'no' | 'candidate';
   created_at?: string;
@@ -122,6 +131,14 @@ export interface BallotItemOption {
 export interface Race {
   id: string;
   office_term_id: string;
+  ballot_item_id?: string;
+  party_id?: string | null;
+  is_partisan?: boolean;
+  is_primary?: boolean;
+  is_recall?: boolean;
+  is_runoff?: boolean;
+  is_off_schedule?: boolean;
+  civic_engine_id?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -155,17 +172,32 @@ export interface OfficeTerm {
 
 export interface Measure {
   id: string;
+  name?: string | null;
   title: string;
   description?: string;
+  summary?: string;
+  full_text?: string | null;
+  con_snippet?: string | null;
+  pro_snippet?: string | null;
+  ballot_item_id?: string;
+  influence_target_id?: string;
   jurisdiction_id?: string;
+  civic_engine_id?: string;
+  direct_embedding_id?: string;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface InfluenceTarget {
   id: string;
-  name: string;
-  type: string;
+  name?: string;
+  description?: string;
+  jurisdiction_id?: string;
+  type?: string;
+  civic_engine_id?: string;
+  direct_embedding_id?: string;
+  aggregate_embedding_id?: string;
+  title_embedding_id?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -201,7 +233,19 @@ export interface JurisdictionConcentration {
     type: string;
     geoid?: string;
     verifiedCount: number;
+    supporterCount: number;
     percentage: number;
+    supporterPercentage: number;
+  }>;
+  allJurisdictions: Array<{
+    id: string;
+    name: string;
+    type: string;
+    geoid?: string;
+    verifiedCount: number;
+    supporterCount: number;
+    percentage: number;
+    supporterPercentage: number;
   }>;
   concentrationIndex: number; // HHI (0-1)
   totalJurisdictions: number;
@@ -222,10 +266,43 @@ export interface BallotExposure {
     candidateCount?: number;
   };
   verifiedSupporters: number;
+  potentialSupporters?: number;
   urgency: UrgencyLevel;
   leverageScore: number;
   leverageLevel?: LeverageLevel;
   jurisdiction?: string;
+  jurisdictionId?: string;
+}
+
+export interface BallotItemInfluence {
+  id: string;
+  title: string;
+  type: 'race' | 'measure';
+  electionId: string;
+  electionName: string;
+  electionDate: string;
+  jurisdiction: string;
+  jurisdictionId?: string;
+  state?: string;
+  supporters: number;
+  verifiedSupporters: number;
+  urgency: UrgencyLevel;
+  officeLevel?: OfficeLevel;
+  officeName?: string;
+  candidateCount?: number;
+  candidates?: Array<{
+    name: string;
+    party?: string;
+  }>;
+  measureSummary?: string;
+  measureProSnippet?: string;
+  measureConSnippet?: string;
+  numWinners?: number;
+  numSelectionsMax?: number;
+  isRankedChoice?: boolean;
+  isPrimary?: boolean;
+  isRunoff?: boolean;
+  isRecall?: boolean;
 }
 
 export interface NetworkExpansion {
@@ -317,6 +394,21 @@ export interface SupporterEngagement {
   engagementScore: number | null;
 }
 
+export interface TopicMetrics {
+  supporterCount: number;
+  verifiedVoterCount: number;
+  leaderCount: number;
+  recentJoiners30d: number;
+  recentJoiners90d: number;
+  topJurisdictions: Array<{
+    id: string;
+    name: string;
+    verifiedCount: number;
+  }>;
+  createdDate?: string;
+  updatedDate?: string;
+}
+
 export interface DashboardModel {
   summary: {
     verifiedVoters: number;
@@ -326,6 +418,7 @@ export interface DashboardModel {
     topics?: string[];
     topicSupporterCounts?: Record<string, number>;
     topicVerifiedVoterCounts?: Record<string, number>;
+    topicMetrics?: Record<string, TopicMetrics>;
     growthRate?: number;
     reach?: number;
     jurisdictions?: string[];
@@ -335,12 +428,14 @@ export interface DashboardModel {
   verifiedVoters: VerifiedVoterMetrics;
   jurisdictions: JurisdictionConcentration;
   ballotExposure: BallotExposure[];
+  ballotItemsInfluence?: BallotItemInfluence[];
   networkExpansion: NetworkExpansion;
   supporterEngagement: SupporterEngagement;
   electoralLandscape?: ElectoralLandscape[];
   coalitionOpportunities?: CoalitionOpportunity[];
   velocity?: MovementVelocity;
   leaderComparison?: LeaderData[];
+  viewpointGroups?: ViewpointGroup[];
 }
 
 // ============================================================================

@@ -11,6 +11,7 @@ interface JurisdictionTableProps {
 
 export function JurisdictionTable({ data }: JurisdictionTableProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showAllSupporters, setShowAllSupporters] = useState(false);
   const displayCount = isExpanded ? data.topJurisdictions.length : 5;
   const interpretConcentration = (hhi: number): {
     label: string;
@@ -86,22 +87,50 @@ export function JurisdictionTable({ data }: JurisdictionTableProps) {
               </div>
               <div className="text-right flex-shrink-0">
                 <div className="text-sm font-semibold text-zinc-900">
-                  {jurisdiction.verifiedCount.toLocaleString()}
+                  {(showAllSupporters ? jurisdiction.supporterCount : jurisdiction.verifiedCount).toLocaleString()}
                 </div>
                 <div className="text-xs text-zinc-500">
-                  {jurisdiction.percentage.toFixed(1)}%
+                  {(showAllSupporters ? jurisdiction.supporterPercentage : jurisdiction.percentage).toFixed(1)}%
                 </div>
               </div>
               <div className="w-20 flex-shrink-0">
                 <div className="w-full bg-zinc-100 rounded-full h-1.5">
                   <div
                     className="bg-zinc-900 h-1.5 rounded-full transition-all"
-                    style={{ width: `${Math.min(jurisdiction.percentage, 100)}%` }}
+                    style={{
+                      width: `${Math.min(
+                        showAllSupporters ? jurisdiction.supporterPercentage : jurisdiction.percentage,
+                        100
+                      )}%`,
+                    }}
                   />
                 </div>
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowAllSupporters(false)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+              !showAllSupporters
+                ? "bg-zinc-900 text-white border-zinc-900"
+                : "bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300"
+            }`}
+          >
+            Verified voters
+          </button>
+          <button
+            onClick={() => setShowAllSupporters(true)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+              showAllSupporters
+                ? "bg-zinc-900 text-white border-zinc-900"
+                : "bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300"
+            }`}
+          >
+            All supporters
+          </button>
         </div>
 
         {data.topJurisdictions.length > 5 && (

@@ -12,6 +12,8 @@ import { LeaderComparison } from "@/components/dashboard/leader-comparison";
 import { TopicAnalysis } from "@/components/dashboard/topic-analysis";
 import { GeographicMap } from "@/components/dashboard/geographic-map";
 import { SupporterEngagementCard } from "@/components/dashboard/supporter-engagement";
+import { ElectionInfluenceList } from "@/components/dashboard/election-influence-list";
+import { TopicOpportunities } from "@/components/dashboard/topic-opportunities";
 
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardModel | null>(null);
@@ -81,9 +83,25 @@ export default function DashboardPage() {
 
         {/* Main Content */}
         <div className="space-y-6">
+          {/* Overview Cards */}
+          <OverviewCards summary={dashboard.summary} />
+
           {/* This Week's Focus */}
           {dashboard.focusThisWeek.length > 0 && (
             <FocusSection insights={dashboard.focusThisWeek} />
+          )}
+
+          {/* Election Influence & Ballot Items */}
+          {dashboard.ballotItemsInfluence && dashboard.ballotItemsInfluence.length > 0 && (
+            <ElectionInfluenceList items={dashboard.ballotItemsInfluence} />
+          )}
+
+          {/* Growth Chart */}
+          {dashboard.verifiedVoters.growthTrend.length > 0 && (
+            <GrowthChart
+              data={dashboard.verifiedVoters.growthTrend}
+              weeklyGrowthRate={dashboard.verifiedVoters.weeklyGrowthRate}
+            />
           )}
 
           {/* Leader Comparison */}
@@ -103,8 +121,11 @@ export default function DashboardPage() {
             />
           )}
 
-          {/* Overview Cards */}
-          <OverviewCards summary={dashboard.summary} />
+          {/* Geographic Map */}
+          <GeographicMap data={dashboard.jurisdictions} />
+
+          {/* Supporter Engagement */}
+          <SupporterEngagementCard engagement={dashboard.supporterEngagement} />
 
           {/* Topic Analysis */}
           {dashboard.summary.topics && dashboard.summary.topics.length > 0 && (
@@ -112,26 +133,19 @@ export default function DashboardPage() {
               topics={dashboard.summary.topics}
               topicSupporterCounts={dashboard.summary.topicSupporterCounts || {}}
               topicVerifiedVoterCounts={dashboard.summary.topicVerifiedVoterCounts || {}}
+              topicMetrics={dashboard.summary.topicMetrics}
             />
           )}
 
-          {/* Supporter Engagement */}
-          <SupporterEngagementCard engagement={dashboard.supporterEngagement} />
-
-          {/* Growth Chart */}
-          {dashboard.verifiedVoters.growthTrend.length > 0 && (
-            <GrowthChart
-              data={dashboard.verifiedVoters.growthTrend}
-              weeklyGrowthRate={dashboard.verifiedVoters.weeklyGrowthRate}
+          {/* Topic Opportunities */}
+          {dashboard.viewpointGroups && 
+           dashboard.viewpointGroups.length > 0 && 
+           dashboard.ballotItemsInfluence && 
+           dashboard.ballotItemsInfluence.length > 0 && (
+            <TopicOpportunities 
+              topics={dashboard.viewpointGroups}
+              ballotItems={dashboard.ballotItemsInfluence}
             />
-          )}
-
-          {/* Geographic Map */}
-          <GeographicMap data={dashboard.jurisdictions} />
-
-          {/* Ballot Exposure */}
-          {dashboard.ballotExposure.length > 0 && (
-            <BallotExposureList exposures={dashboard.ballotExposure} />
           )}
 
           {/* Network Expansion */}

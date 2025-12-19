@@ -63,7 +63,13 @@ export function computeBallotExposure(
   data: SwayStaticData,
   apiElections?: any[] | null
 ): BallotExposure[] {
-  // 1. Get verified supporters and their jurisdictions
+  const measuresByBallotItemId = new Map(
+    data.measures.map((measure) => [measure.ballot_item_id, measure])
+  );
+  const influenceTargetsById = new Map(
+    data.influenceTargets.map((target) => [target.id, target])
+  );
+
   const supporterProfileIds = data.profileViewpointGroupRels
     .filter((rel) => rel.viewpoint_group_id === MAIN_GROUP_ID)
     .map((rel) => rel.profile_id);
@@ -74,18 +80,54 @@ export function computeBallotExposure(
       .map((p) => p.person_id)
   );
 
-  const verifiedVoters = data.voterVerifications.filter(
-    (v) => v.is_fully_verified && supporterPersonIds.has(v.person_id)
+  const supporterVoterVerifications = data.voterVerifications.filter(
+    (verification) => supporterPersonIds.has(verification.person_id)
+  );
+  const supporterVoterVerificationIds = new Set(
+    supporterVoterVerifications.map((verification) => verification.id)
+  );
+  const verifiedVoterVerificationIds = new Set(
+    supporterVoterVerifications
+      .filter((verification) => verification.is_fully_verified)
+      .map((verification) => verification.id)
   );
 
-  // Map: voter_verification_id -> jurisdiction_ids
-  const voterJurisdictions = new Map<string, Set<string>>();
+  const supporterCountsByJurisdiction = new Map<string, number>();
+  const verifiedCountsByJurisdiction = new Map<string, number>();
+
   for (const rel of data.voterVerificationJurisdictionRels) {
-    if (!voterJurisdictions.has(rel.voter_verification_id)) {
-      voterJurisdictions.set(rel.voter_verification_id, new Set());
+    if (!supporterVoterVerificationIds.has(rel.voter_verification_id)) continue;
+
+    supporterCountsByJurisdiction.set(
+      rel.jurisdiction_id,
+      (supporterCountsByJurisdiction.get(rel.jurisdiction_id) || 0) + 1
+    );
+
+    if (verifiedVoterVerificationIds.has(rel.voter_verification_id)) {
+      verifiedCountsByJurisdiction.set(
+        rel.jurisdiction_id,
+        (verifiedCountsByJurisdiction.get(rel.jurisdiction_id) || 0) + 1
+      );
     }
-    voterJurisdictions.get(rel.voter_verification_id)!.add(rel.jurisdiction_id);
   }
+
+  const getJurisdictionLabel = (jurisdiction?: { estimated_name?: string | null; name?: string | null; state?: string | null; geoid?: string | null; id?: string | null }): string | undefined => {
+    if (!jurisdiction) return undefined;
+    return (
+      jurisdiction.estimated_name ||
+      jurisdiction.name ||
+      (jurisdiction.state && jurisdiction.geoid ? `${jurisdiction.state} ${jurisdiction.geoid}` : undefined) ||
+      jurisdiction.state ||
+      jurisdiction.geoid ||
+      jurisdiction.id ||
+      undefined
+    );
+  };
+
+  // 1. Get verified supporters and their jurisdictions
+  const verifiedVoters = supporterVoterVerifications.filter(
+    (v) => v.is_fully_verified
+  );
 
   // 2. For each ballot item, count how many verified voters can vote on it
   const ballotExposures: BallotExposure[] = [];
@@ -107,11 +149,6 @@ export function computeBallotExposure(
       const daysUntil = differenceInDays(electionDate, new Date());
       if (daysUntil < 0) continue;
 
-      // Only include primary elections
-      const electionType = apiElection.type?.toLowerCase() || '';
-      const isPrimary = electionType.includes('primary');
-      if (!isPrimary) continue;
-
       const urgency = calculateUrgency(electionDate);
       const officeLevel = (apiElection.office?.level?.toLowerCase() as OfficeLevel) || 'local';
       const candidateCount = apiElection.candidateCount || 0;
@@ -119,7 +156,6 @@ export function computeBallotExposure(
       // Estimate verified supporters based on jurisdiction match
       // (simplified - in production you'd match by exact jurisdiction)
       const estimatedSupporters = Math.floor(verifiedVoters.length * 0.1);
-      if (estimatedSupporters === 0) continue;
 
       const leverageScore =
         estimatedSupporters *
@@ -149,6 +185,7 @@ export function computeBallotExposure(
           candidateCount,
         },
         verifiedSupporters: estimatedSupporters,
+        potentialSupporters: estimatedSupporters,
         urgency,
         leverageScore,
         leverageLevel,
@@ -158,6 +195,8 @@ export function computeBallotExposure(
   }
 
   for (const ballotItem of data.ballotItems) {
+    if (!ballotItem.jurisdiction_id) continue;
+
     // Get election date
     const election = data.elections.find((e) => e.id === ballotItem.election_id);
     if (!election) continue;
@@ -169,35 +208,23 @@ export function computeBallotExposure(
     const daysUntil = differenceInDays(electionDate, new Date());
     if (daysUntil < 0) continue;
 
-    // Only include primary elections
-    const electionName = election.name?.toLowerCase() || '';
-    const isPrimary = electionName.includes('primary');
-    if (!isPrimary) continue;
-
     const urgency = calculateUrgency(electionDate);
 
-    // Count verified voters who can vote on this ballot item
-    // (their jurisdictions include the ballot item's jurisdiction)
-    let verifiedSupporters = 0;
-    for (const voter of verifiedVoters) {
-      const jurisdictions = voterJurisdictions.get(voter.id);
-      if (
-        jurisdictions &&
-        ballotItem.jurisdiction_id &&
-        jurisdictions.has(ballotItem.jurisdiction_id)
-      ) {
-        verifiedSupporters++;
-      }
-    }
+    const potentialSupporters = supporterCountsByJurisdiction.get(ballotItem.jurisdiction_id) || 0;
+    const verifiedSupporters = verifiedCountsByJurisdiction.get(ballotItem.jurisdiction_id) || 0;
 
-    // Skip ballot items with no supporters
-    if (verifiedSupporters === 0) continue;
+    // Skip ballot items that are outside the supporter footprint
+    if (potentialSupporters === 0) continue;
 
     // Get ballot options to find race/office information
     let officeLevel: OfficeLevel | undefined;
     let officeName: string | undefined;
     let ballotTitle: string | undefined;
     let candidateCount = 0;
+    const measure = measuresByBallotItemId.get(ballotItem.id);
+    const influenceTarget = measure?.influence_target_id
+      ? influenceTargetsById.get(measure.influence_target_id)
+      : undefined;
 
     const ballotOptions = data.ballotItemOptions.filter(
       (opt) => opt.ballot_item_id === ballotItem.id
@@ -237,7 +264,8 @@ export function computeBallotExposure(
     const jurisdictionObj = ballotItem.jurisdiction_id
       ? data.jurisdictions.find((j) => j.id === ballotItem.jurisdiction_id)
       : undefined;
-    const jurisdiction = jurisdictionObj?.estimated_name || jurisdictionObj?.name;
+    const jurisdiction = getJurisdictionLabel(jurisdictionObj);
+    const jurisdictionId = jurisdictionObj?.id;
 
     // Build a title with jurisdiction and year
     const currentYear = new Date().getFullYear();
@@ -248,17 +276,25 @@ export function computeBallotExposure(
         ? `${officeName} (${electionYear})`
         : officeName;
     } else {
+      if (measure) {
+        ballotTitle =
+          measure.title ||
+          measure.name ||
+          influenceTarget?.description ||
+          ballotTitle;
+      }
       // Use jurisdiction + election type for title
-      if (jurisdictionName && !jurisdictionName.toLowerCase().includes('unknown')) {
+      if (!ballotTitle && jurisdictionName && !jurisdictionName.toLowerCase().includes('unknown')) {
         // Extract "Primary Election" from election name, or use full name
         const electionType = election.name.includes('Primary') ? 'Primary Election' : election.name;
         ballotTitle = electionYear !== currentYear
           ? `${jurisdictionName} ${electionType} (${electionYear})`
           : `${jurisdictionName} ${electionType}`;
-      } else {
+      } else if (!ballotTitle) {
+        const measureLabel = measure ? 'Measure' : 'Ballot item';
         ballotTitle = electionYear !== currentYear
-          ? `${election.name} (${electionYear})`
-          : election.name;
+          ? `${measureLabel} in ${election.name} (${electionYear})`
+          : `${measureLabel} in ${election.name}`;
       }
     }
 
@@ -279,7 +315,7 @@ export function computeBallotExposure(
     // Create unique key including year to avoid duplicates across different election cycles
     const uniqueKey = officeName
       ? `${officeName}-${electionYear}`
-      : `${election.id}-${ballotItem.jurisdiction_id}-${electionYear}`;
+      : `ballot-${ballotItem.id}`;
 
     // Skip if we've already seen this combination
     if (seenBallotItems.has(uniqueKey)) continue;
@@ -289,17 +325,19 @@ export function computeBallotExposure(
       ballotItem: {
         id: ballotItem.id,
         title: ballotTitle,
-        type: candidateCount > 0 ? 'race' : 'measure',
+        type: measure ? 'measure' : candidateCount > 0 ? 'race' : 'measure',
         electionDate: election.poll_date,
         officeLevel: level,
         officeName,
         candidateCount,
       },
       verifiedSupporters,
+      potentialSupporters,
       urgency,
       leverageScore,
       leverageLevel,
       jurisdiction,
+      jurisdictionId,
     });
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, TrendingUp, Award, MessageSquare, Filter } from "lucide-react";
 
@@ -57,6 +57,41 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
   const yourVerificationRate = yourStats.verificationRate ?? 0;
   const yourGrowthRate = yourStats.growthRate ?? 0;
   const yourReach = yourStats.reach ?? 0;
+
+  const filterCounts = useMemo(() => {
+    const byTopics = leaders.filter(leader =>
+      leader.groups?.some(group => group.title && yourTopics.includes(group.title))
+    ).length;
+    const byStates = leaders.filter(leader => {
+      if (!leader.jurisdictions || leader.jurisdictions.length === 0) return false;
+      return leader.jurisdictions.some(j => yourJurisdictions.includes(j));
+    }).length;
+    const lowerBound = yourStats.supporters * 0.5;
+    const upperBound = yourStats.supporters * 1.5;
+    const bySize = leaders.filter(leader =>
+      leader.verifiedVoters >= lowerBound && leader.verifiedVoters <= upperBound
+    ).length;
+
+    return {
+      myTopics: byTopics,
+      myStates: byStates,
+      similarSize: bySize,
+    };
+  }, [leaders, yourTopics, yourJurisdictions, yourStats.supporters]);
+
+  const hasFilterOptions = filterCounts.myTopics > 0 || filterCounts.myStates > 0 || filterCounts.similarSize > 0;
+
+  useEffect(() => {
+    if (leaderFilter === 'myTopics' && filterCounts.myTopics === 0) {
+      setLeaderFilter('all');
+    }
+    if (leaderFilter === 'myStates' && filterCounts.myStates === 0) {
+      setLeaderFilter('all');
+    }
+    if (leaderFilter === 'similarSize' && filterCounts.similarSize === 0) {
+      setLeaderFilter('all');
+    }
+  }, [filterCounts.myStates, filterCounts.myTopics, filterCounts.similarSize, leaderFilter]);
 
   // Filter leaders based on "Leaders Like You" filter
   const filteredLeaders = useMemo(() => {
@@ -291,51 +326,59 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
           </div>
 
           {/* Leaders Like You Filter */}
-          <div>
-            <div className="text-xs text-zinc-500 mb-2">Show</div>
-            <div className="inline-flex flex-wrap gap-2">
-              <button
-                onClick={() => setLeaderFilter('all')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                  leaderFilter === 'all'
-                    ? 'bg-zinc-900 text-white border-zinc-900'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
-                }`}
-              >
-                All Leaders
-              </button>
-              <button
-                onClick={() => setLeaderFilter('myTopics')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                  leaderFilter === 'myTopics'
-                    ? 'bg-zinc-900 text-white border-zinc-900'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
-                }`}
-              >
-                In Your Topics
-              </button>
-              <button
-                onClick={() => setLeaderFilter('myStates')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                  leaderFilter === 'myStates'
-                    ? 'bg-zinc-900 text-white border-zinc-900'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
-                }`}
-              >
-                In Your States
-              </button>
-              <button
-                onClick={() => setLeaderFilter('similarSize')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                  leaderFilter === 'similarSize'
-                    ? 'bg-zinc-900 text-white border-zinc-900'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
-                }`}
-              >
-                Similar Size
-              </button>
+          {hasFilterOptions && (
+            <div>
+              <div className="text-xs text-zinc-500 mb-2">Show</div>
+              <div className="inline-flex flex-wrap gap-2">
+                <button
+                  onClick={() => setLeaderFilter('all')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                    leaderFilter === 'all'
+                      ? 'bg-zinc-900 text-white border-zinc-900'
+                      : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                  }`}
+                >
+                  All Leaders
+                </button>
+                {filterCounts.myTopics > 0 && (
+                  <button
+                    onClick={() => setLeaderFilter('myTopics')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      leaderFilter === 'myTopics'
+                        ? 'bg-zinc-900 text-white border-zinc-900'
+                        : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                    }`}
+                  >
+                    In Your Topics
+                  </button>
+                )}
+                {filterCounts.myStates > 0 && (
+                  <button
+                    onClick={() => setLeaderFilter('myStates')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      leaderFilter === 'myStates'
+                        ? 'bg-zinc-900 text-white border-zinc-900'
+                        : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                    }`}
+                  >
+                    In Your States
+                  </button>
+                )}
+                {filterCounts.similarSize > 0 && (
+                  <button
+                    onClick={() => setLeaderFilter('similarSize')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      leaderFilter === 'similarSize'
+                        ? 'bg-zinc-900 text-white border-zinc-900'
+                        : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                    }`}
+                  >
+                    Similar Size
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Stats Overview */}

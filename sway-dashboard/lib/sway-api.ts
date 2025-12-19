@@ -220,6 +220,62 @@ export async function fetchTopLeaders(limit: number = 50): Promise<any[] | null>
   return leaders.sort((a, b) => b.totalSupporters - a.totalSupporters);
 }
 
+type MeasureDetail = {
+  title?: string | null;
+  name?: string | null;
+  summary?: string | null;
+  influenceTarget?: {
+    description?: string | null;
+  } | null;
+};
+
+export async function fetchBallotItemMeasureDetails(
+  ballotItemIds: string[]
+): Promise<Record<string, MeasureDetail>> {
+  if (ballotItemIds.length === 0) {
+    return {};
+  }
+
+  const chunkSize = 200;
+  const results: Record<string, MeasureDetail> = {};
+
+  for (let i = 0; i < ballotItemIds.length; i += chunkSize) {
+    const chunk = ballotItemIds.slice(i, i + chunkSize);
+    const query = `
+      query GetBallotItemMeasures($ids: [uuid!]!) {
+        ballotItems(where: { id: { _in: $ids } }) {
+          id
+          measure {
+            title
+            name
+            summary
+            influenceTarget {
+              description
+            }
+          }
+        }
+      }
+    `;
+
+    const data = await querySwayAPI<{ ballotItems: Array<{ id: string; measure: MeasureDetail | null }> }>(
+      query,
+      { ids: chunk }
+    );
+
+    if (!data?.ballotItems) {
+      continue;
+    }
+
+    for (const item of data.ballotItems) {
+      if (item.measure) {
+        results[item.id] = item.measure;
+      }
+    }
+  }
+
+  return results;
+}
+
 /**
  * Find adjacent leaders in the same jurisdictions
  */

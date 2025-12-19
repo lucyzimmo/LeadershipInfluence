@@ -22,6 +22,12 @@ export function computeJurisdictionConcentration(
       .map((p) => p.person_id)
   );
 
+  const supporterVerificationIds = new Set(
+    data.voterVerifications
+      .filter((v) => supporterPersonIds.has(v.person_id))
+      .map((v) => v.id)
+  );
+
   const verifiedVoterIds = new Set(
     data.voterVerifications
       .filter((v) => v.is_fully_verified && supporterPersonIds.has(v.person_id))
@@ -30,8 +36,13 @@ export function computeJurisdictionConcentration(
 
   // 2. Count verified voters by jurisdiction
   const jurisdictionCounts = new Map<string, number>();
+  const supporterCounts = new Map<string, number>();
 
   for (const rel of data.voterVerificationJurisdictionRels) {
+    if (supporterVerificationIds.has(rel.voter_verification_id)) {
+      const count = supporterCounts.get(rel.jurisdiction_id) || 0;
+      supporterCounts.set(rel.jurisdiction_id, count + 1);
+    }
     if (verifiedVoterIds.has(rel.voter_verification_id)) {
       const count = jurisdictionCounts.get(rel.jurisdiction_id) || 0;
       jurisdictionCounts.set(rel.jurisdiction_id, count + 1);
@@ -39,6 +50,7 @@ export function computeJurisdictionConcentration(
   }
 
   const totalVoters = verifiedVoterIds.size;
+  const totalSupporters = supporterVerificationIds.size;
 
   // 3. Get jurisdiction details and compute percentages
   const jurisdictionData = Array.from(jurisdictionCounts.entries())
@@ -47,7 +59,15 @@ export function computeJurisdictionConcentration(
 
       // Determine type based on geoid pattern and name
       let type = 'unknown';
-      const name = jurisdiction?.estimated_name || jurisdiction?.name || 'Unknown';
+      const name =
+        jurisdiction?.estimated_name ||
+        jurisdiction?.name ||
+        (jurisdiction?.state && jurisdiction?.geoid
+          ? `${jurisdiction.state} ${jurisdiction.geoid}`
+          : jurisdiction?.state) ||
+        jurisdiction?.geoid ||
+        jurisdiction?.id ||
+        'Unknown';
       const geoid = jurisdiction?.geoid;
 
       // States have 2-digit FIPS codes (geoid)
@@ -63,6 +83,8 @@ export function computeJurisdictionConcentration(
         type = 'district'; // Default for state-level codes
       }
 
+      const supporterCount = supporterCounts.get(jurisdictionId) || 0;
+
       return {
         id: jurisdictionId,
         name,
@@ -70,6 +92,8 @@ export function computeJurisdictionConcentration(
         geoid,
         verifiedCount: count,
         percentage: totalVoters > 0 ? (count / totalVoters) * 100 : 0,
+        supporterCount,
+        supporterPercentage: totalSupporters > 0 ? (supporterCount / totalSupporters) * 100 : 0,
       };
     })
     .sort((a, b) => b.verifiedCount - a.verifiedCount);
@@ -87,6 +111,7 @@ export function computeJurisdictionConcentration(
 
   return {
     topJurisdictions: jurisdictionData.slice(0, 10), // Top 10
+    allJurisdictions: jurisdictionData,
     concentrationIndex: hhi,
     totalJurisdictions: jurisdictionCounts.size,
   };

@@ -33,7 +33,7 @@ export function HighLeverageZones({
 
     // Find ballot items in this jurisdiction
     const ballotItemsInJurisdiction = ballotExposures.filter(
-      b => b.jurisdiction === jur.name
+      b => (b.jurisdictionId && b.jurisdictionId === jur.id) || b.jurisdiction === jur.name
     );
 
     // Count high-urgency, high-leverage ballot items

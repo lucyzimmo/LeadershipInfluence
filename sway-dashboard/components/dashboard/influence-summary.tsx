@@ -9,16 +9,20 @@ interface InfluenceSummaryProps {
 }
 
 export function InfluenceSummary({ ballotExposures }: InfluenceSummaryProps) {
+  const verifiedExposures = ballotExposures.filter(
+    (exposure) => exposure.verifiedSupporters > 0
+  );
+
   // Categorize ballot items by winnability
-  const winnable = ballotExposures.filter(
+  const winnable = verifiedExposures.filter(
     b => b.leverageLevel === 'kingmaker' || b.leverageLevel === 'significant'
   );
 
-  const close = ballotExposures.filter(
+  const close = verifiedExposures.filter(
     b => b.leverageLevel === 'marginal' && b.urgency === 'high'
   );
 
-  const lowLeverage = ballotExposures.filter(
+  const lowLeverage = verifiedExposures.filter(
     b => !winnable.includes(b) && !close.includes(b)
   );
 
