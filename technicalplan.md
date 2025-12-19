@@ -1,194 +1,268 @@
-```markdown
-# Sway Leader Influence Dashboard — Take-Home
+# Strategic & Technical Thinking
 
-## Overview
+This prototype demonstrates how Sway can translate verified supporter data into deployable influence insights—while remaining honest about data limitations and the product's current stage. The architecture prioritizes clarity, defensibility, and actionability over precision and scale.
 
-This project prototypes a **Leader Influence Dashboard** for Sway (sway.co): a platform where people **“vote with” trusted leaders on specific topics**, and Sway **verifies registered voters** so leaders can demonstrate credible political leverage (not just social popularity).
+## What shortcuts or simplifications did you make?
 
-**Constraint:** ~4 hours build time  
-**Required stack:** TypeScript + Next.js (frontend)  
-**Core philosophy:** **Influence ≠ popularity.** Influence is *deployable voting power* tied to real ballots and elections.
+To fit the time constraint and focus on decision quality over infrastructure, the following simplifications were made:
 
----
+### Data & Infrastructure
 
-## What “Influence” Means on Sway
+**In-Memory Computation**
+- All analytics computed from static JSON files (~40MB) on each request
+- No database, caching layer, or incremental computation
+- All joins and aggregations handled in application code using Map/Set data structures
+- Performance acceptable for prototype scale (~1000 supporters, ~100 jurisdictions)
 
-**Influence = credible voting power applied to specific ballot decisions + the movement’s ability to compound.**
+**Rationale**: This approach prioritizes rapid iteration and clarity. Every metric calculation is transparent and auditable. The tradeoff is that this won't scale beyond ~10k supporters without significant latency.
 
-A useful mental model:
+### Metric Modeling
 
-> **Influence ≈ Verification × Context × Concentration × Timing × Growth**
+**Leverage Scores**
+- Simple, transparent heuristics combining:
+  - Office-level multipliers (federal > state > local)
+  - Time-to-election decay (exponential decay for urgency)
+  - Verified supporter count thresholds
+- No predictive models or machine learning
+- Leverage levels (kingmaker/significant/marginal) use fixed thresholds
 
-- **Verification (Credibility):** verified registered voters (not anonymous likes)
-- **Context:** overlap between verified supporters and **specific ballot items** (races/measures)
-- **Concentration:** focused support beats diffuse support (by geography + election)
-- **Timing:** elections soon matter more than elections far away
-- **Growth:** movement compounding (supporters → verified → leaders; new jurisdictions unlocked)
+**Jurisdiction Concentration**
+- Standard Herfindahl-Hirschman Index (HHI) without adjusting for:
+  - Turnout variance by jurisdiction
+  - Voter registration rates
+  - Historical electoral competitiveness
+- Concentration risk uses simple thresholds (HHI > 0.5 = high risk)
 
----
+**Growth Trends**
+- Recent time windows (30/90 days) without:
+  - Seasonality adjustments
+  - Cohort normalization
+  - Statistical significance testing
+- Weekly growth rate uses simple linear regression on last 4 weeks
 
-## Data Sources
+**Topic Analysis**
+- Multi-viewpoint group support exists but comparison across topics is limited
+- Topic metrics computed independently without cross-topic normalization
+- Topic opportunities use simple ballot item matching
 
-### 1) Mock Dataset (Primary)
-JSON files representing one leader’s movement (main group ID: `4d627244-5598-4403-8704-979140ae9cac`):
+**API Integration**
+- External Sway API features (CivicEngine context, coalition discovery, benchmarks) are rate-limited
+- Dashboard degrades gracefully when API data unavailable
+- Core functionality never blocked by API failures
+- API enhancements are additive, not required
 
-- Groups + membership: `viewpoint_groups.json`, `profiles.json`, `profile_viewpoint_group_rels.json`
-- People + verification: `persons.json`, `voter_verifications.json`
-- Geography: `jurisdictions.json`, `voter_verification_jurisdiction_rels.json`
-- Elections + ballots: `elections.json`, `ballot_items.json`, `ballot_item_options.json`
-- Race/measure details: `races.json`, `offices.json`, `office_terms.json`, `candidacies.json`, `measures.json`, `parties.json`
-- Target schema: `influence_targets.json`
+**Rationale**: These shortcuts prioritize clarity, defensibility, and actionability over precision. Leaders can understand and trust the metrics because they're transparent. The tradeoff is that some metrics may be less precise than they could be with more sophisticated modeling.
 
-**Key joins**
-- Group members: `profile_viewpoint_group_rels → profiles`
-- Where supporters vote: `profiles → persons → voter_verifications → voter_verification_jurisdiction_rels → jurisdictions`
-- What’s on their ballot: `jurisdictions → ballot_items → races/measures`
+## What assumptions were necessary for this prototype?
 
-### 2) Sway API 
-**GraphQL:** `https://sway-production.hasura.app/v1/graphql` (JWT auth)
+This prototype makes the following assumptions:
 
-Use to enrich the dashboard with:
-- broader electoral context (CivicEngine)
-- coalition opportunities (adjacent leaders)
-- benchmark comparisons (peers)
+**Data Quality**
+- Jurisdiction mappings are correct and stable
+- Voter verification records accurately reflect registration status
+- Ballot item data is complete and up-to-date for upcoming elections
 
----
+**User Model**
+- Supporters belong to a single leader's primary viewpoint group for this dashboard
+- Leader/supporter roles are explicit (leader = leader of viewpoint)
+- Multi-group membership exists but primary group is clear
 
-## Metrics (3–5) that Matter Most
+**Measurement Scope**
+- Influence measured at aggregate level, not individual voter level
+- Strategic horizon is ~6 months (upcoming elections)
+- US-centric electoral structure (state, county, city jurisdictions)
 
-These metrics are chosen because they are **computable from the dataset**, **actionable**, and map directly to Sway’s “influence ≠ popularity” thesis.
+**Privacy & Neutrality**
+- No individual voter targeting or contact information
+- No voting history or preference inference
+- No electoral outcome prediction
 
-1) **Verified Voter Base + Growth Rate**  
-   *How much credible voting power exists, and is it growing?*
+**Rationale**: These assumptions allow the dashboard to remain accurate without inferring data Sway does not yet collect. They align with Sway's privacy-first, neutral positioning.
 
-2) **Jurisdiction Concentration Index** (HHI + top jurisdictions)  
-   *Where is influence geographically deployable (dense vs diffuse)?*
+## What would break or need redesign at 100k supporters or 100k leaders?
 
-3) **Ballot Exposure by Race/Measure**  
-   *Which specific decisions can this leader influence (and how many verified voters are eligible to vote on each)?*
+At scale, several aspects of this prototype would require redesign:
 
-4) **Urgency-Weighted Influence** (time-decay + office-level leverage heuristic)  
-   *What matters now vs later? Prioritize nearer elections and (heuristically) lower-turnout local races.*
+### Performance & Architecture
 
-5) **Network Expansion Signal**  
-   *Is the movement compounding (supporters becoming leaders, unlocking new jurisdictions)?*
+**Current Limits**
+- Loading ~40MB of JSON on every request becomes infeasible (>5s load time)
+- In-memory joins across hundreds of thousands of relationships cause timeouts
+- Client-side filtering and sorting of large ballot/jurisdiction lists degrades UX
+- API calls for leader comparisons and coalition discovery hit rate and latency limits
 
----
+**Required Changes**
 
-## What the Dashboard Should Enable (Insights → Actions)
+**1. Database Migration**
+- Move to PostgreSQL with indexed joins on person, group, and jurisdiction IDs
+- Denormalize frequently accessed relationships (e.g., supporter → jurisdiction mapping)
+- Partition large tables by jurisdiction or time period
 
-The dashboard should be **prescriptive, not just descriptive**. For each insight, it should recommend a concrete next step.
+**2. Materialized Metrics**
+- Pre-compute core metrics (verified voters, jurisdiction counts, ballot exposure)
+- Incremental updates instead of full recomputation
+- Background jobs for expensive metrics (network expansion, coalition analysis)
+- Smart invalidation on data changes
 
-Examples:
-- **High leverage + near election:** “Focus on [Race/Measure] — publish voter guide + run targeted onboarding in [Jurisdiction].”
-- **High concentration + low verification rate:** “Run a verification push in [Top Jurisdiction] to convert latent support into influence.”
-- **Influence is diffuse:** “Pick 1–2 priority jurisdictions to concentrate growth before the next election window.”
-- **Weak network effect:** “Recruit chapter leaders from top jurisdictions; provide a template guide they can rebroadcast.”
+**3. Caching Strategy**
+- Redis cache for dashboard responses with TTL-based invalidation
+- CDN for static metric visualizations
+- Client-side caching with service workers for offline access
 
----
+**4. Pagination & Filtering**
+- Server-side pagination for ballot items, jurisdictions, and leader lists
+- Elasticsearch or similar for complex filtering and search
+- Virtualized lists for large datasets in UI
 
-## Out of Scope (and Why)
+**5. API Rate Limiting & Batching**
+- Batch API requests where possible
+- Implement request queuing and retry logic
+- Cache API responses with appropriate TTLs
+- Fallback to static data when API unavailable
 
-- **Election outcome forecasting / ‘who will win’** — requires turnout history + introduces forecasting liability.
-- **Persuasion effectiveness** — needs messaging and engagement telemetry not in the dataset.
-- **Individual-level microtargeting** — privacy-sensitive; MVP focuses on aggregate influence.
-- **Cross-leader competitive ranking** — requires multi-leader datasets and careful neutrality framing.
+### Data Model Extensions
 
----
+**Multi-Leader Support**
+- Supporters can belong to multiple groups (already in data model)
+- Aggregate metrics across all groups a leader manages
+- Cross-group coalition analysis
 
-## Implementation Plan
+**Historical Tracking**
+- Time-series data for all metrics (not just verified voters)
+- Historical snapshots for trend analysis
+- Event logging for audit trails
 
-### Architecture: Static-first, API-enhanced 
-- **No database** for the take-home: compute analytics **in-memory** from JSON on the server.
-- One endpoint returns a typed `DashboardModel`.
-- API enrichments are best-effort and non-blocking (graceful degradation).
+**Real-Time Updates**
+- WebSocket or polling for live metric updates
+- Incremental metric recalculation on data changes
+- Push notifications for urgent actions
 
-### Stack
-- Next.js (App Router) + TypeScript
-- Tailwind CSS
-- shadcn/ui (UI components)
-- Recharts (charts)
+## What new capabilities would you add at scale (perhaps with information from other leaders)?
 
----
+With multi-leader data and a scalable backend, Sway could unlock higher-order influence analytics:
 
-## Core Computations (Sketch)
+### Coalition Intelligence
 
-### Verified Voter Base
-- Join `profile_viewpoint_group_rels → profiles → persons → voter_verifications`
-- `current = count(distinct verified voters)`
-- `verificationRate = verified / total supporters`
-- `trend = bucket by created_at if available; otherwise explain bucketing approach`
+**Current**: Basic coalition opportunities based on shared jurisdictions
 
-### Jurisdiction Concentration (HHI)
-- Count verified voters per jurisdiction
-- `HHI = Σ (share_j²)` where `share_j = count_j / total_verified`
+**At Scale**:
+- Identify leaders with overlapping jurisdictions or complementary ballot exposure
+- Estimate combined leverage across coalitions
+- Suggest partnerships where marginal collaboration yields outsized impact
+- Model coalition formation scenarios ("What if we partner with Leader X?")
 
-### Ballot Exposure
-- For each ballot item, count verified voters in jurisdictions where it appears
-- Add:
-  - **urgency** (days until election)
-  - **office level multiplier** (local/state/federal) as a simple leverage heuristic
-  - **leverageScore = exposure × urgencyWeight × levelMultiplier**
+**Technical Requirements**:
+- Graph database for relationship analysis (Neo4j or similar)
+- Network analysis algorithms (community detection, influence propagation)
+- Real-time coalition matching engine
 
-### Network Expansion
-- Supporters in main group who appear as leaders of other groups
-- Count derivative leaders + new jurisdictions unlocked by their groups
+### Network Effect Analytics
 
----
+**Current**: Connected leaders and new jurisdictions unlocked
 
-## File Structure
+**At Scale**:
+- Measure second-degree reach (supporters of supporters who become leaders)
+- Identify which organizers unlock new jurisdictions most effectively
+- Track network depth vs. breadth over time
+- Model network growth scenarios
 
-```
+**Technical Requirements**:
+- Graph traversal algorithms for multi-hop analysis
+- Network metrics computation (centrality, clustering, etc.)
+- Time-series network evolution tracking
 
-sway-dashboard/
-├── app/
-│   ├── api/dashboard/route.ts
-│   └── page.tsx
-├── lib/
-│   ├── data-loader.ts
-│   ├── metrics/
-│   │   ├── verified-voters.ts
-│   │   ├── jurisdictions.ts
-│   │   ├── ballot-exposure.ts
-│   │   ├── network-expansion.ts
-│   │   └── actions.ts
-│   ├── sway-api.ts 
-│   └── types.ts
-├── components/dashboard/…
-├── data/ (JSON files)
-└── README.md (Part 3: Evolution & tradeoffs)
+### Movement Velocity Benchmarks
 
-````
+**Current**: Basic growth rate and trend direction
 
----
+**At Scale**:
+- Compare growth, verification, and expansion rates against peer leaders
+- Detect early signals of acceleration or stagnation
+- Normalize growth by movement size and geography
+- Predictive models for growth trajectories
 
-## UI Layout (High-level)
+**Technical Requirements**:
+- Statistical analysis and percentile calculations
+- Cohort analysis and normalization
+- Time-series forecasting models
 
-1) **This Week’s Focus** (top 1–3 recommended actions)
-2) **Overview KPIs** (verified voters, verification rate, concentration, network)
-3) **Growth Trend** (verified voters over time)
-4) **Where Influence Lives** (top jurisdictions + HHI)
-5) **Upcoming Elections / Ballot Items** (ranked by leverage score)
-6) Optional: API-enhanced panels (coalitions, benchmarks)
+### Strategic Scenario Modeling (Carefully)
 
----
+**Current**: Static metrics and projections
 
-## Environment Variables (Optional)
+**At Scale**:
+- "What if" simulations (e.g., +50 verified voters in District X)
+- Time-to-critical-mass estimates for target jurisdictions
+- Verification conversion forecasting based on cohort behavior
+- Resource allocation optimization (where to invest verification efforts)
 
-```env
-SWAY_API_KEY=...
-````
+**Technical Requirements**:
+- Monte Carlo simulation framework
+- Optimization algorithms (linear programming, etc.)
+- A/B testing infrastructure for validating models
 
----
+**Important**: These features enhance strategic clarity, not electoral prediction. They help leaders make better decisions about where to invest effort, not predict election outcomes.
 
-## Success Criteria
+## What would you build next — and why?
 
-* Metrics are **credible, data-driven, and tied to ballots/elections**
-* The dashboard produces **clear, prioritized actions**
-* Code is **type-safe, modular, and readable**
-* Tradeoffs and scale considerations are documented (100k supporters / 100k leaders)
+### 1. Database & Materialized Metrics (Highest Priority)
 
-```
+**Why**: Enables scale, real-time updates, and reliable performance. Without this, the dashboard cannot support production use.
 
-::contentReference[oaicite:0]{index=0}
-```
+**What**:
+- PostgreSQL migration with proper indexing
+- Materialized views for core metrics
+- Incremental update jobs
+- Caching layer (Redis)
+
+**Timeline**: 2-3 weeks
+
+### 2. Workflow Integration
+
+**Why**: Turns insights into execution. The dashboard tells leaders what to do—now we need to help them do it.
+
+**What**:
+- One-click voter guide creation from prioritized races
+- Jurisdiction-specific messaging and verification campaigns
+- Task tracking tied to "This Week's Focus"
+- Export capabilities (CSV, PDF reports)
+
+**Timeline**: 1-2 weeks
+
+### 3. Historical & Comparative Trends
+
+**Why**: Learning loops for organizers. Leaders need to see what works over time.
+
+**What**:
+- Multi-month metric histories
+- Annotations for major campaigns or events
+- Comparative analysis (this month vs. last month)
+- Trend visualization improvements
+
+**Timeline**: 1 week
+
+### 4. Connected Leader Network View
+
+**Why**: Support federated organizing. Leaders need to coordinate with allies.
+
+**What**:
+- Visualize organizer networks and jurisdiction expansion
+- Coordinate campaigns across allied leaders
+- Shared action planning
+- Network health metrics
+
+**Timeline**: 2 weeks
+
+### 5. Mobile-First Experience
+
+**Why**: Organizers work in the field. The dashboard should be accessible anywhere.
+
+**What**:
+- Responsive design improvements
+- Push alerts for urgent races
+- Quick actions (share guide, verification links)
+- Offline access for organizers in the field
+
+**Timeline**: 1-2 weeks
+
+**Rationale**: This order reflects a bias toward making leaders more effective, not just more informed. Each feature builds on the previous one, creating a compounding value proposition. The database foundation enables everything else, workflow integration closes the loop from insight to action, and the remaining features enhance strategic clarity and coordination.
