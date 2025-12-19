@@ -22,7 +22,10 @@ To fit the time constraint and focus on decision quality over infrastructure, th
   - Time-to-election decay (exponential decay for urgency)
   - Verified supporter count thresholds
 - No predictive models or machine learning
-- Leverage levels (kingmaker/significant/marginal) use fixed thresholds
+
+**Lack of Referral Data**
+- Referrals would be an excellent way to track supporter engagement and network expansion
+- This was not made available in the data
 
 **Jurisdiction Concentration**
 - Standard Herfindahl-Hirschman Index (HHI) without adjusting for:
@@ -42,6 +45,7 @@ To fit the time constraint and focus on decision quality over infrastructure, th
 - Multi-viewpoint group support exists but comparison across topics is limited
 - Topic metrics computed independently without cross-topic normalization
 - Topic opportunities use simple ballot item matching
+- More topic data would mean more opportunities surfaced with our algorithm
 
 **API Integration**
 - External Sway API features (CivicEngine context, coalition discovery, benchmarks) are rate-limited
@@ -70,7 +74,7 @@ To fit the time constraint and focus on decision quality over infrastructure, th
 - No individual voter targeting or contact information
 - No voting history or preference inference
 - No electoral outcome prediction
-
+- 
 **Rationale**: These assumptions allow the dashboard to remain accurate without inferring data Sway does not yet collect.
 
 ## What would break or need redesign at 100k supporters or 100k leaders?
