@@ -37,11 +37,16 @@ interface LeaderComparisonProps {
   topicSupporterCounts?: Record<string, number>;
 }
 
-type ComparisonMetric = 'verifiedVoters' | 'verificationRate' | 'growthRate' | 'reach';
+type ComparisonMetric = 'supporters' | 'viewpoints' | 'verifiedVoters' | 'verificationRate' | 'growthRate' | 'reach';
 type LeaderFilter = 'all' | 'myTopics' | 'myStates' | 'similarSize';
 
 export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJurisdictions = [], topicSupporterCounts = {} }: LeaderComparisonProps) {
-  const [metric, setMetric] = useState<ComparisonMetric>('verifiedVoters');
+  // Check if we have valid verification data for leaders
+  const hasVerificationData = useMemo(() => {
+    return leaders.some(l => l.verifiedVoters > 0 || l.verificationRate > 0 || l.growthRate > 0 || l.reach > 0);
+  }, [leaders]);
+
+  const [metric, setMetric] = useState<ComparisonMetric>(hasVerificationData ? 'verifiedVoters' : 'supporters');
   const [leaderFilter, setLeaderFilter] = useState<LeaderFilter>('all');
 
   if (!leaders || leaders.length === 0) {
@@ -103,6 +108,11 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
   // Calculate yourValue based on metric
   const yourValue = useMemo(() => {
     switch (metric) {
+      case 'supporters':
+        // For supporters, sum all supporters across all topics
+        return Object.values(topicSupporterCounts).reduce((sum, count) => sum + count, 0) || yourStats.supporters;
+      case 'viewpoints':
+        return yourViewpoints;
       case 'verifiedVoters':
         return yourStats.supporters;
       case 'verificationRate':
@@ -114,11 +124,15 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
       default:
         return 0;
     }
-  }, [metric, yourStats.supporters, yourVerificationRate, yourGrowthRate, yourReach]);
+  }, [metric, yourStats.supporters, yourVerificationRate, yourGrowthRate, yourReach, yourViewpoints, topicSupporterCounts]);
 
   // Get metric label and formatting
   const getMetricLabel = (metric: ComparisonMetric): string => {
     switch (metric) {
+      case 'supporters':
+        return 'supporters';
+      case 'viewpoints':
+        return 'viewpoints';
       case 'verifiedVoters':
         return 'verified voters';
       case 'verificationRate':
@@ -134,6 +148,8 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
 
   const formatMetricValue = (value: number, metric: ComparisonMetric): string => {
     switch (metric) {
+      case 'supporters':
+      case 'viewpoints':
       case 'verifiedVoters':
       case 'reach':
         return value.toLocaleString();
@@ -151,6 +167,10 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
   // Get leader value for a specific metric
   const getLeaderValue = (leader: LeaderData, metric: ComparisonMetric): number => {
     switch (metric) {
+      case 'supporters':
+        return leader.totalSupporters;
+      case 'viewpoints':
+        return leader.totalViewpoints;
       case 'verifiedVoters':
         return leader.verifiedVoters;
       case 'verificationRate':
@@ -188,11 +208,11 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
     : 0;
 
   return (
-    <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-      <CardContent className="p-6">
-        <div className="mb-1">
-          <div className="pt-5 text-sm font-medium text-zinc-900">Leader comparison</div>
-          <div className="text-sm text-zinc-500">
+    <Card className="rounded-xl border-zinc-200 shadow-sm">
+      <CardContent className="p-7">
+        <div className="mb-5">
+          <div className="pt-5 text-lg font-bold text-zinc-900">Leader comparison</div>
+          <div className="text-base text-zinc-600 mt-1">
             Your influence vs {totalLeaders} other leaders on Sway
           </div>
         </div>
@@ -204,45 +224,69 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
             <div className="text-xs text-zinc-500 mb-2">Rank by</div>
             <div className="inline-flex flex-wrap gap-2">
               <button
-                onClick={() => setMetric('verifiedVoters')}
+                onClick={() => setMetric('supporters')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                  metric === 'verifiedVoters'
+                  metric === 'supporters'
                     ? 'bg-zinc-900 text-white border-zinc-900'
                     : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
                 }`}
               >
-                Verified Voters
+                Supporters
               </button>
               <button
-                onClick={() => setMetric('verificationRate')}
+                onClick={() => setMetric('viewpoints')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                  metric === 'verificationRate'
+                  metric === 'viewpoints'
                     ? 'bg-zinc-900 text-white border-zinc-900'
                     : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
                 }`}
               >
-                Verification Rate
+                Viewpoints
               </button>
-              <button
-                onClick={() => setMetric('growthRate')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                  metric === 'growthRate'
-                    ? 'bg-zinc-900 text-white border-zinc-900'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
-                }`}
-              >
-                Growth
-              </button>
-              <button
-                onClick={() => setMetric('reach')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                  metric === 'reach'
-                    ? 'bg-zinc-900 text-white border-zinc-900'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
-                }`}
-              >
-                Reach
-              </button>
+              {hasVerificationData && (
+                <>
+                  <button
+                    onClick={() => setMetric('verifiedVoters')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      metric === 'verifiedVoters'
+                        ? 'bg-zinc-900 text-white border-zinc-900'
+                        : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                    }`}
+                  >
+                    Verified Voters
+                  </button>
+                  <button
+                    onClick={() => setMetric('verificationRate')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      metric === 'verificationRate'
+                        ? 'bg-zinc-900 text-white border-zinc-900'
+                        : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                    }`}
+                  >
+                    Verification Rate
+                  </button>
+                  <button
+                    onClick={() => setMetric('growthRate')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      metric === 'growthRate'
+                        ? 'bg-zinc-900 text-white border-zinc-900'
+                        : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                    }`}
+                  >
+                    Growth
+                  </button>
+                  <button
+                    onClick={() => setMetric('reach')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      metric === 'reach'
+                        ? 'bg-zinc-900 text-white border-zinc-900'
+                        : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300'
+                    }`}
+                  >
+                    Reach
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -295,40 +339,40 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
         </div>
 
         {/* Stats Overview */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
-            <div className="flex items-center gap-2 mb-2">
-              <Award className="h-4 w-4 text-zinc-500" />
-              <div className="text-xs text-zinc-500">Your ranking</div>
+        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="p-5 rounded-lg bg-gradient-to-br from-blue-50 to-white border border-blue-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Award className="h-5 w-5 text-blue-600" />
+              <div className="text-xs font-semibold text-blue-900 uppercase tracking-wider">Your ranking</div>
             </div>
-            <div className="text-2xl font-semibold tracking-tight text-zinc-900">
+            <div className="text-3xl font-bold tracking-tight text-blue-900">
               {yourRank > 0 ? `#${yourRank}` : `#${totalLeaders + 1}`}
             </div>
-            <div className="text-sm text-zinc-600 mt-1">
+            <div className="text-sm font-medium text-blue-700 mt-2">
               {percentile > 0 ? `Top ${percentile}% of leaders` : 'Below top 10'}
             </div>
           </div>
 
-          <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-4 w-4 text-zinc-500" />
-              <div className="text-xs text-zinc-500">Average {metricLabel}</div>
+          <div className="p-5 rounded-lg bg-white border border-zinc-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-5 w-5 text-zinc-500" />
+              <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Average {metricLabel}</div>
             </div>
             {totalLeaders > 0 ? (
               <>
-                <div className="text-2xl font-semibold tracking-tight text-zinc-900">
+                <div className="text-3xl font-bold tracking-tight text-zinc-900">
                   {formatMetricValue(avgValue, metric)}
                 </div>
-                <div className="text-sm text-zinc-600 mt-1">
+                <div className="text-sm font-medium text-zinc-600 mt-2">
                   You have {formatMetricValue(yourValue, metric)}
                 </div>
               </>
             ) : (
               <>
-                <div className="text-2xl font-semibold tracking-tight text-zinc-500">
+                <div className="text-3xl font-bold tracking-tight text-zinc-400">
                   —
                 </div>
-                <div className="text-sm text-zinc-500 mt-1">
+                <div className="text-sm font-medium text-zinc-500 mt-2">
                   No leaders in this filter
                 </div>
               </>
@@ -337,8 +381,8 @@ export function LeaderComparison({ leaders, yourStats, yourTopics = [], yourJuri
         </div>
 
         {/* Top Leaders Bar Chart */}
-        <div className="mt-6">
-          <div className="text-xs font-medium text-zinc-700 mb-3">
+        <div className="mt-8">
+          <div className="text-sm font-bold text-zinc-900 mb-4">
             Top 10 leaders by {metricLabel}
           </div>
 

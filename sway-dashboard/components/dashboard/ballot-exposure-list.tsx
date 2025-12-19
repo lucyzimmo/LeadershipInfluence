@@ -61,11 +61,11 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
   const displayCount = isExpanded ? sortedExposures.length : 10;
 
   return (
-    <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-      <CardContent className="p-6">
-        <div className="mb-1">
-          <div className="pt-5 text-sm font-medium text-zinc-900">Upcoming elections</div>
-          <div className="text-sm text-zinc-500">
+    <Card className="rounded-xl border-zinc-200 shadow-sm">
+      <CardContent className="p-7">
+        <div className="mb-5">
+          <div className="pt-5 text-lg font-bold text-zinc-900">Upcoming elections</div>
+          <div className="text-base text-zinc-600 mt-1">
             {sortedExposures.length} {locationSearch ? `of ${exposures.length}` : ''} opportunities to influence
           </div>
         </div>
@@ -74,44 +74,44 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
         <div className="mt-4 space-y-3">
           {/* Location Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
             <input
               type="text"
               placeholder="Search by location or election name..."
               value={locationSearch}
               onChange={(e) => setLocationSearch(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 text-sm border border-zinc-200 rounded-md bg-white text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+              className="w-full pl-12 pr-12 py-3 text-sm font-medium border-2 border-zinc-200 rounded-lg bg-white text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
             {locationSearch && (
               <button
                 onClick={() => setLocationSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 transition-colors"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             )}
           </div>
 
           {/* Sort Controls */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-600">Sort by:</span>
-            <div className="flex gap-1">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-zinc-700">Sort by:</span>
+            <div className="flex gap-2">
               <button
                 onClick={() => setSortBy('leverage')}
-                className={`text-xs px-3 py-1 rounded-md transition-colors ${
+                className={`text-sm font-medium px-4 py-2 rounded-lg transition-all ${
                   sortBy === 'leverage'
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                    ? 'bg-zinc-900 text-white shadow-sm'
+                    : 'bg-white text-zinc-700 border-2 border-zinc-200 hover:border-zinc-300'
                 }`}
               >
                 Leverage
               </button>
               <button
                 onClick={() => setSortBy('date')}
-                className={`text-xs px-3 py-1 rounded-md transition-colors ${
+                className={`text-sm font-medium px-4 py-2 rounded-lg transition-all ${
                   sortBy === 'date'
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                    ? 'bg-zinc-900 text-white shadow-sm'
+                    : 'bg-white text-zinc-700 border-2 border-zinc-200 hover:border-zinc-300'
                 }`}
               >
                 Date
@@ -144,24 +144,24 @@ export function BallotExposureList({ exposures }: BallotExposureListProps) {
               return (
                 <div
                   key={exposure.ballotItem.id}
-                  className={`p-4 rounded-lg border ${urgency.borderColor} ${urgency.bgColor}`}
+                  className={`p-5 rounded-lg border-2 ${urgency.borderColor} ${urgency.bgColor} hover:shadow-md transition-shadow`}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-zinc-900">
+                      <h3 className="text-base font-bold text-zinc-900 mb-3">
                         {exposure.ballotItem.title ||
                          (exposure.ballotItem.officeName ||
                           `${exposure.ballotItem.type === 'race' ? 'Race' : 'Measure'} in ${exposure.jurisdiction || 'Unknown'}`)}
                       </h3>
 
-                      <div className="mt-2 flex items-center gap-4 text-sm text-zinc-600 flex-wrap">
-                        <span className="font-medium text-emerald-700">
+                      <div className="flex items-center gap-5 text-sm flex-wrap">
+                        <span className="font-bold text-emerald-700">
                           {exposure.verifiedSupporters} verified voters
                         </span>
-                        <span>{daysUntil} days until election</span>
+                        <span className="font-medium text-zinc-700">{daysUntil} days until election</span>
                         {exposure.jurisdiction && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
+                          <span className="flex items-center gap-1.5 font-medium text-zinc-600">
+                            <MapPin className="h-4 w-4" />
                             {exposure.jurisdiction}
                           </span>
                         )}

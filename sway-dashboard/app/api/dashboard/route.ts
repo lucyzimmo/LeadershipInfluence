@@ -4,6 +4,8 @@ import { computeVerifiedVoters } from '@/lib/metrics/verified-voters';
 import { computeJurisdictionConcentration } from '@/lib/metrics/jurisdictions';
 import { computeBallotExposure } from '@/lib/metrics/ballot-exposure';
 import { computeNetworkExpansion } from '@/lib/metrics/network-expansion';
+import { computeSupporterEngagement } from '@/lib/metrics/supporter-engagement';
+import { enrichLeaderMetrics } from '@/lib/metrics/leader-enrichment';
 import { deriveActions } from '@/lib/metrics/actions';
 import {
   fetchCivicEngineData,
@@ -36,6 +38,7 @@ export async function GET() {
     const verifiedVoters = computeVerifiedVoters(staticData);
     const jurisdictions = computeJurisdictionConcentration(staticData);
     const networkExpansion = computeNetworkExpansion(staticData);
+    const supporterEngagement = computeSupporterEngagement(staticData);
     console.timeEnd('Compute core metrics');
 
     // 3. Optionally fetch API enhancements (non-blocking)
@@ -91,9 +94,9 @@ export async function GET() {
         apiEnhancements.upcomingElections = upcomingElections;
       }
 
-      // Store leader comparison data
+      // Store leader comparison data and enrich with verification metrics from static data
       if (topLeaders && topLeaders.length > 0) {
-        apiEnhancements.leaderComparison = topLeaders;
+        apiEnhancements.leaderComparison = enrichLeaderMetrics(topLeaders, staticData);
         console.log(`Fetched ${topLeaders.length} leaders for comparison`);
       }
     } catch (apiError) {
@@ -181,7 +184,7 @@ export async function GET() {
       summary: {
         verifiedVoters: verifiedVoters.current,
         verificationRate: verifiedVoters.verificationRate,
-        derivativeLeaders: networkExpansion.derivativeLeaders,
+        connectedLeaders: networkExpansion.connectedLeaders,
         viewpoints: yourViewpoints,
         topics: yourTopics,
         topicSupporterCounts,
@@ -196,6 +199,7 @@ export async function GET() {
       jurisdictions,
       ballotExposure,
       networkExpansion,
+      supporterEngagement,
       ...apiEnhancements,
     };
 

@@ -11,8 +11,7 @@ import { BallotExposureList } from "@/components/dashboard/ballot-exposure-list"
 import { LeaderComparison } from "@/components/dashboard/leader-comparison";
 import { TopicAnalysis } from "@/components/dashboard/topic-analysis";
 import { GeographicMap } from "@/components/dashboard/geographic-map";
-import { InfluenceSummary } from "@/components/dashboard/influence-summary";
-import { HighLeverageZones } from "@/components/dashboard/high-leverage-zones";
+import { SupporterEngagementCard } from "@/components/dashboard/supporter-engagement";
 
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardModel | null>(null);
@@ -61,20 +60,20 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-8 py-10 space-y-8">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+        <div className="flex items-start justify-between pb-6 border-b border-zinc-200">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
               Leader Influence Dashboard
             </h1>
-            <p className="text-sm text-zinc-600 max-w-2xl">
+            <p className="text-base text-zinc-600 max-w-3xl leading-relaxed">
               Where your verified voters can decisively influence upcoming ballot outcomes — and what actions will increase that influence.
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-zinc-500">Last updated</div>
-            <div className="text-sm font-medium text-zinc-900">
+          <div className="text-right bg-white px-4 py-3 rounded-lg border border-zinc-200">
+            <div className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Last updated</div>
+            <div className="text-sm font-semibold text-zinc-900 mt-1">
               {new Date(dashboard.summary.lastUpdated).toLocaleString()}
             </div>
           </div>
@@ -116,6 +115,9 @@ export default function DashboardPage() {
             />
           )}
 
+          {/* Supporter Engagement */}
+          <SupporterEngagementCard engagement={dashboard.supporterEngagement} />
+
           {/* Growth Chart */}
           {dashboard.verifiedVoters.growthTrend.length > 0 && (
             <GrowthChart
@@ -134,38 +136,38 @@ export default function DashboardPage() {
 
           {/* Network Expansion */}
           {dashboard.networkExpansion && (
-            <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-              <CardContent className="p-6">
-                <div className="mb-1">
-                  <div className="pt-5 text-sm font-medium text-zinc-900">Network expansion</div>
-                  <div className="text-sm text-zinc-500">Leadership development & reach</div>
+            <Card className="rounded-xl border-zinc-200 shadow-sm">
+              <CardContent className="p-7">
+                <div className="mb-5">
+                  <div className="pt-5 text-lg font-bold text-zinc-900">Network expansion</div>
+                  <div className="text-base text-zinc-600 mt-1">Leadership development & reach</div>
                 </div>
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
-                    <div className="text-xs text-zinc-500">Derivative leaders</div>
-                    <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-1">
-                      {dashboard.networkExpansion.derivativeLeaders}
+                <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="p-5 rounded-lg bg-white border-2 border-zinc-200">
+                    <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Connected leaders</div>
+                    <div className="text-3xl font-bold tracking-tight text-zinc-900">
+                      {dashboard.networkExpansion.connectedLeaders}
                     </div>
-                    <div className="text-sm text-zinc-600 mt-2">
-                      Supporters who became leaders
+                    <div className="text-sm font-medium text-zinc-600 mt-3">
+                      Supporters who lead their own groups
                     </div>
                   </div>
-                  <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
-                    <div className="text-xs text-zinc-500">New jurisdictions</div>
-                    <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-1">
+                  <div className="p-5 rounded-lg bg-white border-2 border-zinc-200">
+                    <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">New jurisdictions</div>
+                    <div className="text-3xl font-bold tracking-tight text-zinc-900">
                       {dashboard.networkExpansion.newJurisdictions}
                     </div>
-                    <div className="text-sm text-zinc-600 mt-2">
-                      Unlocked through derivative leaders
+                    <div className="text-sm font-medium text-zinc-600 mt-3">
+                      Reached through connected leaders
                     </div>
                   </div>
                   {dashboard.networkExpansion.potentialLeaders !== undefined && (
-                    <div className="p-4 rounded-lg bg-white border border-zinc-200/70">
-                      <div className="text-xs text-zinc-500">Potential leaders</div>
-                      <div className="text-2xl font-semibold tracking-tight text-zinc-900 mt-1">
+                    <div className="p-5 rounded-lg bg-white border-2 border-zinc-200">
+                      <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Potential leaders</div>
+                      <div className="text-3xl font-bold tracking-tight text-zinc-900">
                         {dashboard.networkExpansion.potentialLeaders}
                       </div>
-                      <div className="text-sm text-zinc-600 mt-2">
+                      <div className="text-sm font-medium text-zinc-600 mt-3">
                         Verified supporters who could lead
                       </div>
                     </div>
@@ -178,11 +180,11 @@ export default function DashboardPage() {
           {/* API-Enhanced Features */}
           {dashboard.coalitionOpportunities &&
             dashboard.coalitionOpportunities.length > 0 && (
-              <Card className="rounded-xl border-zinc-200/70 shadow-sm">
-                <CardContent className="p-6">
-                  <div className="mb-1">
-                    <div className="pt-5 text-sm font-medium text-zinc-900">Coalition opportunities</div>
-                    <div className="text-sm text-zinc-500">Potential partnerships with aligned leaders</div>
+              <Card className="rounded-xl border-zinc-200 shadow-sm">
+                <CardContent className="p-7">
+                  <div className="mb-5">
+                    <div className="pt-5 text-lg font-bold text-zinc-900">Coalition opportunities</div>
+                    <div className="text-base text-zinc-600 mt-1">Potential partnerships with aligned leaders</div>
                   </div>
                   <div className="mt-4 space-y-3">
                     {dashboard.coalitionOpportunities.map((coalition, index) => (

@@ -229,7 +229,7 @@ export interface BallotExposure {
 }
 
 export interface NetworkExpansion {
-  derivativeLeaders: number;
+  connectedLeaders: number;
   newJurisdictions: number;
   trend: TimeSeriesPoint[];
   potentialLeaders?: number; // Supporters who could become leaders
@@ -309,11 +309,19 @@ export interface LeaderData {
   jurisdictions?: string[];
 }
 
+export interface SupporterEngagement {
+  totalSupporters: number;
+  recentJoiners30d: number;
+  recentJoiners90d: number;
+  recentVerificationRate: number;
+  engagementScore: number | null;
+}
+
 export interface DashboardModel {
   summary: {
     verifiedVoters: number;
     verificationRate: number;
-    derivativeLeaders: number;
+    connectedLeaders: number;
     viewpoints?: number;
     topics?: string[];
     topicSupporterCounts?: Record<string, number>;
@@ -328,6 +336,7 @@ export interface DashboardModel {
   jurisdictions: JurisdictionConcentration;
   ballotExposure: BallotExposure[];
   networkExpansion: NetworkExpansion;
+  supporterEngagement: SupporterEngagement;
   electoralLandscape?: ElectoralLandscape[];
   coalitionOpportunities?: CoalitionOpportunity[];
   velocity?: MovementVelocity;

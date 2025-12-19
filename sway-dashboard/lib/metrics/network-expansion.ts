@@ -23,8 +23,8 @@ export function computeNetworkExpansion(
   );
 
   // 2. Find supporters who are also leaders in OTHER groups
-  const derivativeLeaderProfiles = new Set<string>();
-  const derivativeLeaderGroups = new Set<string>();
+  const connectedLeaderProfiles = new Set<string>();
+  const connectedLeaderGroups = new Set<string>();
 
   for (const rel of data.profileViewpointGroupRels) {
     if (
@@ -32,23 +32,23 @@ export function computeNetworkExpansion(
       rel.viewpoint_group_id !== MAIN_GROUP_ID &&
       mainGroupSupporters.has(rel.profile_id)
     ) {
-      derivativeLeaderProfiles.add(rel.profile_id);
-      derivativeLeaderGroups.add(rel.viewpoint_group_id);
+      connectedLeaderProfiles.add(rel.profile_id);
+      connectedLeaderGroups.add(rel.viewpoint_group_id);
     }
   }
 
-  const derivativeLeaders = derivativeLeaderProfiles.size;
+  const connectedLeaders = connectedLeaderProfiles.size;
 
-  // 3. Count new jurisdictions reached through derivative leaders
+  // 3. Count new jurisdictions reached through connected leaders
   // Get jurisdictions covered by main group
   const mainGroupJurisdictions = getGroupJurisdictions(
     data,
     MAIN_GROUP_ID
   );
 
-  // Get jurisdictions covered by derivative leader groups
+  // Get jurisdictions covered by connected leader groups
   const newJurisdictions = new Set<string>();
-  for (const groupId of derivativeLeaderGroups) {
+  for (const groupId of connectedLeaderGroups) {
     const groupJurisdictions = getGroupJurisdictions(data, groupId);
     for (const jurisdictionId of groupJurisdictions) {
       if (!mainGroupJurisdictions.has(jurisdictionId)) {
@@ -59,15 +59,15 @@ export function computeNetworkExpansion(
 
   // 4. Compute trend over time (if timestamps available)
   const trend: TimeSeriesPoint[] = [];
-  // For now, return empty trend - would need creation dates of derivative leader groups
+  // For now, return empty trend - would need creation dates of connected leader groups
 
   // 5. Calculate potential leaders (supporters who could become leaders)
   // Heuristic: verified supporters who are not yet leaders
   const verifiedSupporters = getVerifiedSupporters(data, MAIN_GROUP_ID);
-  const potentialLeaders = verifiedSupporters.size - derivativeLeaders;
+  const potentialLeaders = verifiedSupporters.size - connectedLeaders;
 
   return {
-    derivativeLeaders,
+    connectedLeaders,
     newJurisdictions: newJurisdictions.size,
     trend,
     potentialLeaders: Math.max(0, potentialLeaders),

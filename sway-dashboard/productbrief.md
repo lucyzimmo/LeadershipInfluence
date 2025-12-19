@@ -1,122 +1,106 @@
+Leader Influence Dashboard — Product Brief
+1) What does “influence” mean on Sway?
 
+On Sway, influence is not popularity. Popularity signals interest, but influence exists only when that interest can be credibly deployed in real elections.
 
-# Leader Influence Dashboard — Product Brief
+Sway is built to convert social alignment into deployable voting power: verified voters, tied to jurisdictions, mapped to real ballot items on real election dates. If popularity alone were sufficient, Sway wouldn’t need verification or ballot infrastructure.
 
-## 1. What does “influence” mean on Sway?
+Definition: Influence on Sway is a leader’s ability to credibly shape electoral decisions by organizing verified voters in the jurisdictions and elections where those decisions are made.
 
-On Sway, **influence is not popularity**. Popularity represents interest or alignment, but influence only exists when that interest can be **credibly deployed in real elections**.
+Influence emerges when a leader’s network satisfies four conditions:
 
-If popularity alone were sufficient, Sway would not need voter verification, jurisdictions, ballot items, or election data. Instead, Sway is explicitly designed to transform social alignment into **deployable voting power**.
+Credibility: supporters are verified, eligible voters
 
-**Influence on Sway is defined as a leader’s ability to credibly shape real electoral decisions by organizing verified voters in the jurisdictions and elections where those decisions are made.**
+Context: those voters intersect with specific ballot items (races/measures)
 
-A leader with 10,000 supporters who cannot vote in the same election has less influence than a leader with 500 verified voters concentrated in a decisive local race. Influence emerges when a leader’s supporter network meets four conditions:
+Concentration: support is focused in the same places and time windows (e.g., an upcoming election)
 
-* **Credibility**: supporters are verified, eligible voters
-* **Context**: those voters can act on specific ballot items (races or measures)
-* **Concentration**: support is focused geographically and temporally
-* **Growth capacity**: the network can compound through recruitment, verification, and new leaders
+Growth capacity: influence compounds through recruiting, verification conversion, and supporters becoming leaders
 
-In product terms:
+In product terms: Popularity = potential energy. Influence = kinetic energy.
+This dashboard exists to show leaders where influence is real today, and what to do next to grow it.
 
-* **Popularity = potential energy**
-* **Influence = kinetic energy**
+2) Which 3–5 metrics matter most?
 
-The Leader Influence Dashboard exists to show leaders **where their potential turns into real political leverage**, and how to grow it.
+These metrics are computable from the provided data, actionable for leaders, and honest about what can be claimed today.
 
----
+1. Verified Voter Base + Growth
 
-## 2. Which 3–5 metrics matter most?
+Verified voters aligned with the leader
 
-The dashboard focuses on metrics that are **measurable from existing data**, **actionable for leaders**, and **honest about what Sway can claim today**.
+Growth over time (e.g., weekly/monthly)
 
-### 1. Verified Voter Base (and Growth Rate)
+Verification rate (% of supporters verified)
 
-* Count of verified voters aligned with the leader
-* Trend over time (growth velocity)
+Why: verified voters are the foundation of credible leverage; growth is a leading indicator of movement health.
 
-**Why it matters:** Verification is the foundation of credible influence. Growth rate is a leading indicator of movement health.
+2. Jurisdiction Concentration
 
----
+Verified voters by jurisdiction
 
-### 2. Jurisdiction Concentration Index
+Concentration summary (e.g., top jurisdiction share; optionally an HHI-style index)
 
-* Distribution of verified voters across jurisdictions
-* Share of total voters concentrated in top jurisdictions
+Why: influence depends on density—concentrated support produces leverage; diffuse support indicates reach/potential but is harder to deploy.
 
-**Why it matters:** Influence depends on density. Concentrated support creates leverage; diffuse support creates potential.
+3. Ballot Exposure
 
----
+For each ballot item: # of verified voters who will see it
 
-### 3. Ballot Exposure by Race / Measure
+Ranked and grouped by election date and jurisdiction
 
-* Number of verified voters who will see each ballot item
-* Ranked by exposure, grouped by upcoming elections
+Why: influence is only real where your people can vote on a concrete decision.
 
-**Why it matters:** Influence only exists where voters intersect with real decisions. This metric translates supporters into concrete electoral leverage.
+4. Urgency-Weighted Influence
 
----
+Ballot exposure weighted by time-to-election (e.g., <30 days, 30–90, 90+)
 
-### 4. Urgency-Weighted Influence
+Why: leaders need to prioritize what matters now, not just what matters eventually.
 
-* Ballot exposure weighted by time-to-election
-* Near-term elections prioritized over distant ones
+5. Network Expansion Signal
+of supporters who become leaders
 
-**Why it matters:** Influence is time-bound. Leaders need to know where to focus *now* versus where they are building long-term power.
+New jurisdictions reached via connected leaders (where possible)
 
----
+Why: durable influence compounds through organizer networks, not just follower counts.
 
-### 5. Network Expansion Signal
+3) What insights and actions should the dashboard enable?
 
-* Supporters who become leaders
-* New jurisdictions unlocked through derivative leaders
+This dashboard is prescriptive, not just descriptive. It should let a leader answer:
 
-**Why it matters:** Durable influence compounds through organizer networks, not just follower counts.
+Where does my influence actually exist right now?
 
----
+Which upcoming elections/races/measures matter most to my network?
 
-## 3. What insights and actions should the dashboard enable?
+What should I do this week to increase leverage?
 
-The dashboard is **prescriptive, not just descriptive**. It should help leaders answer:
+“This Week’s Focus” (primary UX)
 
-* *Where does my influence actually exist right now?*
-* *Which elections and ballot items matter most to my network?*
-* *Where should I invest time and outreach next?*
+Auto-surface 3–5 prioritized actions, each tied to a metric shift:
 
-Examples of insights → actions:
+High-urgency, high-exposure ballot items → “Publish a voter guide + mobilize supporters here”
 
-* **Insight:** 68% of verified voters are concentrated in two jurisdictions with elections in the next 60 days
-  **Action:** Prioritize voter guides and recruitment campaigns in those jurisdictions
+Strong jurisdictions with low verification rate → “Run a targeted verification push”
 
-* **Insight:** A local race has high supporter exposure but low verification rate
-  **Action:** Run a targeted verification push for supporters in that district
+High concentration risk → “Expand into adjacent jurisdictions before you’re fragile”
 
-* **Insight:** Network growth is plateauing in core jurisdictions
-  **Action:** Encourage trusted supporters to form new groups and expand into adjacent areas
+Low network expansion → “Recruit chapter leaders from engaged supporters”
 
-The dashboard should make it obvious **what to do this week**, not just what is true.
+Success criterion: a leader opens the dashboard and immediately knows the top few moves to make this week.
 
----
+4) What’s out of scope (and why)?
 
-## 4. What’s out of scope (and why)?
+To stay accurate, neutral, and stage-appropriate, this MVP explicitly avoids:
 
-To remain accurate, neutral, and stage-appropriate, the following are explicitly out of scope for this MVP:
+Predicting election outcomes
+Requires turnout history and competitiveness modeling; introduces forecasting and liability risk.
 
-* **Predicting election outcomes**
-  Requires historical turnout data and introduces forecasting and liability concerns
+Persuasion / vote switching measurement
+Sway tracks alignment and organization, not opinion change.
 
-* **Persuasion or vote-switching measurement**
-  Sway tracks alignment and organization, not opinion change
+Individual-level targeting or micro-profiling
+Focus is aggregate, privacy-preserving influence—not voter surveillance.
 
-* **Individual-level targeting or micro-profiling**
-  The focus is aggregate, privacy-preserving influence, not voter targeting
+Competitive leader “rankings” as a primary incentive
+Risks incentivizing popularity; this dashboard prioritizes actionable leverage over leaderboard dynamics.
 
-* **Cross-leader competitive benchmarking**
-  Requires multi-leader datasets and risks incentivizing popularity over meaningful leverage
-
-These capabilities are intentionally deferred to protect trust, accuracy, and focus while Sway builds toward scale.
-
----
-
-**Summary:**
-The Leader Influence Dashboard translates Sway’s core promise — *Vote with people you trust to create real political power* — into a concrete, decision-making tool. It shows leaders where their network’s potential becomes real influence, and how to grow that influence responsibly over time.
+These are intentionally deferred to protect trust, accuracy, and product focus while the platform scales.

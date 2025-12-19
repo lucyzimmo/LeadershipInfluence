@@ -47,19 +47,19 @@ export function JurisdictionTable({ data }: JurisdictionTableProps) {
   const concentration = interpretConcentration(data.concentrationIndex);
 
   return (
-    <Card className="pt-5 rounded-xl border-zinc-200/70 shadow-sm">
-      <CardContent className="">
-        <div className="mb-4">
-          <div className="pt-5 text-sm font-medium text-zinc-900">Geographic concentration</div>
-          <div className="text-sm text-zinc-500 mb-2">
+    <Card className="rounded-xl border-zinc-200 shadow-sm">
+      <CardContent className="p-7">
+        <div className="mb-5">
+          <div className="pt-5 text-lg font-bold text-zinc-900">Geographic concentration</div>
+          <div className="text-base text-zinc-600 mb-3 mt-1">
             {concentration.label} concentration (HHI: {data.concentrationIndex.toFixed(2)})
           </div>
-          <div className="text-sm font-medium text-zinc-700 italic mb-2">
+          <div className="text-base font-semibold text-zinc-800 italic mb-3">
             {concentration.opinion}
           </div>
-          <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-            <div className="text-xs font-medium text-blue-900 mb-1">Recommendation</div>
-            <div className="text-sm text-blue-800">
+          <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+            <div className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-2">Recommendation</div>
+            <div className="text-sm font-medium text-blue-900 leading-relaxed">
               {concentration.recommendation}
             </div>
           </div>

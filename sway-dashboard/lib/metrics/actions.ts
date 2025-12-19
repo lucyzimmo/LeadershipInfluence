@@ -64,16 +64,16 @@ export function deriveActions(context: MetricsContext): ActionableInsight[] {
 
   // 3. Network expansion opportunity
   if (
-    context.networkExpansion.derivativeLeaders < 3 &&
+    context.networkExpansion.connectedLeaders < 3 &&
     context.networkExpansion.potentialLeaders &&
     context.networkExpansion.potentialLeaders > 10
   ) {
     insights.push({
       priority: insights.length < 2 ? 2 : 3,
-      title: 'Recruit chapter leaders',
-      description: `${context.networkExpansion.potentialLeaders} potential leaders identified`,
-      metric: `Current derivative leaders: ${context.networkExpansion.derivativeLeaders}`,
-      action: 'Reach out to top supporters about starting chapters',
+      title: 'Grow your network of allied organizers',
+      description: `${context.networkExpansion.potentialLeaders} engaged supporters could start their own groups`,
+      metric: `Current connected leaders: ${context.networkExpansion.connectedLeaders}`,
+      action: 'Encourage top supporters to organize in their communities',
       impact: 'medium',
     });
   }
