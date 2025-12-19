@@ -139,20 +139,35 @@ At scale, several aspects of this MVP would require redesign:
 
 With multi-leader data and a scalable backend, Sway could unlock higher-order influence analytics:
 
-### Coalition Intelligence
+### Topic and Ballot Intelligence
 
-**Current**: Basic coalition opportunities based on shared jurisdictions
+**Current**: Support and growth metrics are shown per topic without direct electoral context.
 
 **At Scale**:
-- Identify leaders with overlapping jurisdictions or complementary ballot exposure
-- Estimate combined leverage across coalitions
-- Suggest partnerships where marginal collaboration yields outsized impact
-- Model coalition formation scenarios ("What if we partner with Leader X?")
+- Map each topic to the specific ballot items, races, and measures it influences
+- Visualize verified voter strength by topic within each upcoming election
+- Highlight which issues have near-term leverage versus long-term potential
+- Surface topic-driven expansion opportunities into new races or jurisdictions
 
 **Technical Requirements**:
-- Graph database for relationship analysis (Neo4j or similar)
-- Network analysis algorithms (community detection, influence propagation)
-- Real-time coalition matching engine
+- Topic → ballot item → jurisdiction mapping
+- Topic-level aggregation of verified voters and growth metrics
+- Timeline-based visualization tying issues to election dates
+  
+### Coalition Intelligence
+
+**Current**: Leaders can see basic overlap with other leaders based on shared jurisdictions.
+
+**At Scale**:
+- Identify leaders with overlapping or complementary ballot exposure in the same elections
+- Visualize combined verified voter reach per ballot item and jurisdiction
+- Estimate marginal leverage gained by partnering (e.g., “Together you unlock decisive influence in District X”)
+- Explore coalition scenarios to prioritize partnerships with the highest electoral payoff
+
+**Technical Requirements**:
+- Graph-based relationship modeling (leaders ↔ jurisdictions ↔ ballot items)
+- Aggregation of verified voters across multiple leaders
+- Coalition-level leverage scoring and visualization
 
 ### Network Effect Analytics
 
@@ -214,13 +229,13 @@ With multi-leader data and a scalable backend, Sway could unlock higher-order in
 
 ### 2. Workflow Integration
 
-**Why**: Turns insights into execution. The dashboard tells leaders what to do—now we need to help them do it.
+**Why**: Turns insights into execution flows. The dashboard tells leaders what to do—now we need to help them do it.
 
 **What**:
 - One-click voter guide creation from prioritized races
 - Jurisdiction-specific messaging and verification campaigns
 - Task tracking tied to "This Week's Focus"
-- Export capabilities (CSV, PDF reports)
+- Export capabilities for reports (CSV, PDF)
 
 
 ### 3. Historical & Comparative Trends
@@ -229,13 +244,13 @@ With multi-leader data and a scalable backend, Sway could unlock higher-order in
 
 **What**:
 - Multi-month metric histories
-- Annotations for major campaigns or events
+- Annotations for major elections or events
 - Comparative analysis (this month vs. last month)
 - Trend visualization improvements
   
 ### 4. Connected Leader Network View
 
-**Why**: Support federated organizing. Leaders need to coordinate with allies.
+**Why**: Leaders need to coordinate with allies and be able to combine influence.
 
 **What**:
 - Visualize organizer networks and jurisdiction expansion
