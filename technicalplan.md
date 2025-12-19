@@ -1,7 +1,5 @@
 # Strategic & Technical Thinking
 
-This prototype demonstrates how Sway can translate verified supporter data into deployable influence insights—while remaining honest about data limitations and the product's current stage. The architecture prioritizes clarity, defensibility, and actionability over precision and scale.
-
 ## What shortcuts or simplifications did you make?
 
 To fit the time constraint and focus on decision quality over infrastructure, the following simplifications were made:
@@ -51,8 +49,6 @@ To fit the time constraint and focus on decision quality over infrastructure, th
 - Core functionality never blocked by API failures
 - API enhancements are additive, not required
 
-**Rationale**: These shortcuts prioritize clarity, defensibility, and actionability over precision. Leaders can understand and trust the metrics because they're transparent. The tradeoff is that some metrics may be less precise than they could be with more sophisticated modeling.
-
 ## What assumptions were necessary for this prototype?
 
 This prototype makes the following assumptions:
@@ -77,7 +73,7 @@ This prototype makes the following assumptions:
 - No voting history or preference inference
 - No electoral outcome prediction
 
-**Rationale**: These assumptions allow the dashboard to remain accurate without inferring data Sway does not yet collect. They align with Sway's privacy-first, neutral positioning.
+**Rationale**: These assumptions allow the dashboard to remain accurate without inferring data Sway does not yet collect.
 
 ## What would break or need redesign at 100k supporters or 100k leaders?
 
@@ -201,8 +197,6 @@ With multi-leader data and a scalable backend, Sway could unlock higher-order in
 - Optimization algorithms (linear programming, etc.)
 - A/B testing infrastructure for validating models
 
-**Important**: These features enhance strategic clarity, not electoral prediction. They help leaders make better decisions about where to invest effort, not predict election outcomes.
-
 ## What would you build next — and why?
 
 ### 1. Database & Materialized Metrics (Highest Priority)
@@ -215,7 +209,6 @@ With multi-leader data and a scalable backend, Sway could unlock higher-order in
 - Incremental update jobs
 - Caching layer (Redis)
 
-**Timeline**: 2-3 weeks
 
 ### 2. Workflow Integration
 
@@ -227,7 +220,6 @@ With multi-leader data and a scalable backend, Sway could unlock higher-order in
 - Task tracking tied to "This Week's Focus"
 - Export capabilities (CSV, PDF reports)
 
-**Timeline**: 1-2 weeks
 
 ### 3. Historical & Comparative Trends
 
@@ -238,9 +230,7 @@ With multi-leader data and a scalable backend, Sway could unlock higher-order in
 - Annotations for major campaigns or events
 - Comparative analysis (this month vs. last month)
 - Trend visualization improvements
-
-**Timeline**: 1 week
-
+  
 ### 4. Connected Leader Network View
 
 **Why**: Support federated organizing. Leaders need to coordinate with allies.
@@ -251,18 +241,3 @@ With multi-leader data and a scalable backend, Sway could unlock higher-order in
 - Shared action planning
 - Network health metrics
 
-**Timeline**: 2 weeks
-
-### 5. Mobile-First Experience
-
-**Why**: Organizers work in the field. The dashboard should be accessible anywhere.
-
-**What**:
-- Responsive design improvements
-- Push alerts for urgent races
-- Quick actions (share guide, verification links)
-- Offline access for organizers in the field
-
-**Timeline**: 1-2 weeks
-
-**Rationale**: This order reflects a bias toward making leaders more effective, not just more informed. Each feature builds on the previous one, creating a compounding value proposition. The database foundation enables everything else, workflow integration closes the loop from insight to action, and the remaining features enhance strategic clarity and coordination.
