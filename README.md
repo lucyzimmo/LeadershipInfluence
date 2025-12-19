@@ -51,8 +51,6 @@ To fit the time constraint and focus on decision quality over infrastructure, th
 
 ## What assumptions were necessary for this prototype?
 
-This prototype makes the following assumptions:
-
 **Data Quality**
 - Jurisdiction mappings are correct and stable
 - Voter verification records accurately reflect registration status
@@ -77,7 +75,7 @@ This prototype makes the following assumptions:
 
 ## What would break or need redesign at 100k supporters or 100k leaders?
 
-At scale, several aspects of this prototype would require redesign:
+At scale, several aspects of this MVP would require redesign:
 
 ### Performance & Architecture
 
@@ -199,7 +197,7 @@ With multi-leader data and a scalable backend, Sway could unlock higher-order in
 
 ## What would you build next — and why?
 
-### 1. Database & Materialized Metrics (Highest Priority)
+### 1. Database & Materialized Metrics
 
 **Why**: Enables scale, real-time updates, and reliable performance. Without this, the dashboard cannot support production use.
 
